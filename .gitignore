@@ -1,0 +1,17 @@
+node_modules/
+.next/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+coverage/
+.p0-lab-token
+.p0-evidence/
+.p0-lab-pids.json
+.p0-session-journal.json
+.p0-session-journal.json.*.tmp
+/dist/
+/.release-cache/
+/.offline-build/
+/data/
