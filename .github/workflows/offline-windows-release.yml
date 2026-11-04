@@ -59,8 +59,16 @@ jobs:
       - name: Prepare Windows GNU toolchain for native Moonlight build
         shell: pwsh
         run: |
-          rustup target add x86_64-pc-windows-gnu
-          rustup target add wasm32-unknown-unknown
+          # The audited upstream has rust-toolchain.toml: channel = "1.99.0".
+          # The runner default may be newer; native GNU libcore MUST match 1.99.0.
+          rustup toolchain install 1.99.0 --profile minimal
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned Rust 1.99.0 installation failed' }
+          rustup target add --toolchain 1.99.0 x86_64-pc-windows-gnu wasm32-unknown-unknown
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned Rust 1.99.0 target install failed' }
+          $libdir=(& rustc +1.99.0 --print target-libdir --target x86_64-pc-windows-gnu).Trim()
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path $libdir) -or !(Get-ChildItem $libdir -Filter 'libcore-*.rlib' -ErrorAction SilentlyContinue)) {
+            throw "Missing Rust 1.99.0 GNU target libcore in $libdir"
+          }
           if (!(Get-Command gcc -ErrorAction SilentlyContinue)) {
             choco install mingw --no-progress -y
             if ($LASTEXITCODE -ne 0) { throw 'MinGW install failed' }
