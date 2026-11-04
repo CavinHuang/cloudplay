@@ -56,7 +56,8 @@ function listFiles(root,cur=root,out=[]) {
 }
 const hash = f => createHash('sha256').update(fs.readFileSync(f)).digest('hex');
 function atomicManifest(out,mode,metadata={}) {
-  const files=listFiles(out).filter(f=>path.basename(f)!=='manifest.json').map(f=>({
+  const rootManifest=path.join(out,'manifest.json');
+  const files=listFiles(out).filter(f=>f!==rootManifest).map(f=>({
     path:path.relative(out,f).split(path.sep).join('/'), bytes:fs.statSync(f).size, sha256:hash(f)
   }));
   const manifest={schema:'cloudplay.offline.v1',cloudplayVersion:'0.12.0',mode,createdAt:new Date().toISOString(),
@@ -94,6 +95,7 @@ function assembleUnsafe(opts) {
     copyFile(path.join(repo,'scripts','release','verify-offline.mjs'),path.join(out,'deploy','verify-offline.mjs'),'Integrity verifier');
     copyFile(path.join(repo,'scripts','release','install-offline.mjs'),path.join(out,'deploy','install-offline.mjs'),'Offline release manager');
     copyFile(path.join(repo,'scripts','release','windows-pe.mjs'),path.join(out,'deploy','windows-pe.mjs'),'Windows binary gate');
+    copyFile(path.join(repo,'scripts','release','smoke-windows-offline.ps1'),path.join(out,'deploy','smoke-windows-offline.ps1'),'Offline Windows startup smoke');
     copyFile(opts['moonlight-server'],path.join(out,'services','moonlight','web-server.exe'),'Moonlight Windows executable');
     copyTree(opts['moonlight-static'],path.join(out,'services','moonlight','static'));
     // The complete corresponding patched Moonlight source is included in the

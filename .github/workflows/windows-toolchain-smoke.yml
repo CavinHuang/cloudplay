@@ -1,0 +1,33 @@
+name: CloudPlay Windows toolchain smoke
+# Fast, real Windows command-shim compatibility gate; no GPU or credentials.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/windows-toolchain-smoke.yml'
+      - 'scripts/p0/check-moonlight-toolchain.mjs'
+      - 'lib/lab/moonlight-toolchain.mjs'
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  windows-node-npm-preflight:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26.4.0'
+      - name: Use pinned-compatible npm
+        shell: pwsh
+        run: |
+          npm install --global npm@11.17.0 --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { throw 'npm install failed' }
+      - name: Verify toolchain from Node on Windows
+        shell: pwsh
+        run: |
+          node scripts/p0/check-moonlight-toolchain.mjs
+          if ($LASTEXITCODE -ne 0) { throw 'Windows toolchain gate failed' }
+      - name: Run pinned compatibility regression tests
+        run: node --test tests/moonlight-toolchain.test.mjs

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import {execFileSync} from 'node:child_process';
 import {version} from 'node:process';
-import {checkMoonlightVersions} from '../../lib/lab/moonlight-toolchain.mjs';
+import {checkMoonlightVersions,npmVersionInvocation} from '../../lib/lab/moonlight-toolchain.mjs';
 import {PINNED_UPSTREAM} from './integrate-moonlight-web.mjs';
 let npmVersion=null;
-try {npmVersion=execFileSync('npm',['--version'],{encoding:'utf8',timeout:7000}).trim();}
+try {const {command,args}=npmVersionInvocation();npmVersion=execFileSync(command,args,{encoding:'utf8',timeout:7000}).trim();}
 catch { /* clear missing-tool error in report */ }
 const result=checkMoonlightVersions({node:version,npm:npmVersion});
 console.log(JSON.stringify({tool:'Moonlight Web P0 build preflight',pinnedUpstream:PINNED_UPSTREAM,

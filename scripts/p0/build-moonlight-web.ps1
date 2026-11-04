@@ -45,8 +45,13 @@ if(-not $Build) {
 $gnu='x86_64-pc-windows-gnu'
 if(-not (Get-Command 'cargo' -ErrorAction SilentlyContinue)){ throw 'cargo not found on PATH' }
 if(-not (Get-Command 'wasm-bindgen' -ErrorAction SilentlyContinue)){ throw 'wasm-bindgen-cli not found; install matching wasm-bindgen-cli and retry' }
+$wasmVersion=(& wasm-bindgen --version) -join ' '
+if($LASTEXITCODE -ne 0 -or $wasmVersion -notmatch '(?<!\d)0\.2\.128(?!\d)'){
+  throw "Pinned Moonlight Web requires wasm-bindgen-cli 0.2.128 (installed: $wasmVersion). Build machine must install the matching CLI."
+}
+
 if(-not $FrontendOnly) {
-$rustTargets=(& rustup target list --installed) -join "`n"
+$rustTargets=(& rustup target list --installed --toolchain 1.99.0) -join "`n"
 if($LASTEXITCODE -ne 0 -or $rustTargets -notmatch [regex]::Escape($gnu)) {
   throw "Missing Rust GNU target $gnu. Install rustup, target, and MinGW toolchain before building."
 }

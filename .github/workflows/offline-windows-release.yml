@@ -1,8 +1,20 @@
-name: Build complete Windows offline deployment bundle (manual)
+name: Build complete Windows offline deployment bundle
 # The build runner is online. The published artifact runs offline on the GPU host.
 # This is a BUILD WORKFLOW, not a Windows GPU media acceptance test.
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    tags: ['v*']
+    paths:
+      - '.github/workflows/offline-windows-release.yml'
+      - 'scripts/release/**'
+      - 'scripts/p0/**'
+      - 'lib/lab/moonlight-toolchain.mjs'
+
+concurrency:
+  group: cloudplay-windows-offline-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -30,8 +42,8 @@ jobs:
         id: cloud-node
         shell: pwsh
         run: |
-          $home=Split-Path (Get-Command node).Source -Parent
-          "home=$home" >> $env:GITHUB_OUTPUT
+          $nodeHome=Split-Path (Get-Command node).Source -Parent
+          "home=$nodeHome" >> $env:GITHUB_OUTPUT
       - name: Build and test CloudPlay website
         shell: pwsh
         working-directory: cloudplay
@@ -50,13 +62,32 @@ jobs:
       - name: Prepare Windows GNU toolchain for native Moonlight build
         shell: pwsh
         run: |
-          rustup target add x86_64-pc-windows-gnu
+          # The audited upstream has rust-toolchain.toml: channel = "1.99.0".
+          # The runner default may be newer; native GNU libcore MUST match 1.99.0.
+          rustup toolchain install 1.99.0 --profile minimal
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned Rust 1.99.0 installation failed' }
+          rustup target add --toolchain 1.99.0 x86_64-pc-windows-gnu wasm32-unknown-unknown
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned Rust 1.99.0 target install failed' }
+          $libdir=(& rustc +1.99.0 --print target-libdir --target x86_64-pc-windows-gnu).Trim()
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path $libdir) -or !(Get-ChildItem $libdir -Filter 'libcore-*.rlib' -ErrorAction SilentlyContinue)) {
+            throw "Missing Rust 1.99.0 GNU target libcore in $libdir"
+          }
           if (!(Get-Command gcc -ErrorAction SilentlyContinue)) {
             choco install mingw --no-progress -y
+            if ($LASTEXITCODE -ne 0) { throw 'MinGW install failed' }
           }
+          if (!(Get-Command gcc -ErrorAction SilentlyContinue)) { throw 'MinGW gcc is not on PATH after setup' }
           if (!(Get-Command wasm-bindgen -ErrorAction SilentlyContinue)) {
-            cargo install wasm-bindgen-cli --locked
+            cargo install wasm-bindgen-cli --version 0.2.128 --locked
           }
+      - name: Report compiler versions
+        shell: pwsh
+        run: |
+          gcc -dumpmachine
+          rustc --version
+          cargo --version
+          node --version
+          npm --version
       - name: Compile patched Moonlight Web Stream
         shell: pwsh
         working-directory: cloudplay
@@ -91,3 +122,40 @@ jobs:
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
+
+  offline-bundle-smoke:
+    name: Clean Windows offline startup verification
+    needs: windows-offline-bundle
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download actual build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: CloudPlay-Windows-Offline-v0.12.0
+          path: release
+      - name: Verify bundled Node, native Moonlight and Next startup with clean PATH
+        shell: pwsh
+        run: |
+          & .\release\deploy\smoke-windows-offline.ps1 -BundlePath .\release
+          if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Offline smoke failed' }
+
+  offline-install-acceptance:
+    name: Clean-host install, upgrade and rollback
+    needs: offline-bundle-smoke
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Download release from this workflow
+        uses: actions/download-artifact@v4
+        with:
+          name: CloudPlay-Windows-Offline-v0.12.0
+          path: release
+      - name: Exercise installed release slots with bundled Node only
+        shell: pwsh
+        run: |
+          & .\scripts\release\smoke-windows-install.ps1 -BundlePath .\release
+          if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Windows installation acceptance failed' }
