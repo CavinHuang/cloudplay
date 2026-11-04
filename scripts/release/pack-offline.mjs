@@ -94,6 +94,7 @@ function assembleUnsafe(opts) {
     copyFile(path.join(repo,'scripts','release','verify-offline.mjs'),path.join(out,'deploy','verify-offline.mjs'),'Integrity verifier');
     copyFile(path.join(repo,'scripts','release','install-offline.mjs'),path.join(out,'deploy','install-offline.mjs'),'Offline release manager');
     copyFile(path.join(repo,'scripts','release','windows-pe.mjs'),path.join(out,'deploy','windows-pe.mjs'),'Windows binary gate');
+    copyFile(path.join(repo,'scripts','release','smoke-windows-offline.ps1'),path.join(out,'deploy','smoke-windows-offline.ps1'),'Offline Windows startup smoke');
     copyFile(opts['moonlight-server'],path.join(out,'services','moonlight','web-server.exe'),'Moonlight Windows executable');
     copyTree(opts['moonlight-static'],path.join(out,'services','moonlight','static'));
     // The complete corresponding patched Moonlight source is included in the
