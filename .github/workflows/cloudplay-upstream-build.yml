@@ -2,10 +2,6 @@ name: CloudPlay pinned Moonlight Web integration build
 # Opt-in: compiling the Rust + TypeScript upstream can be expensive. No
 # untrusted PR may execute this workflow with secrets or GPU access.
 on:
-  push:
-    branches: [feat/p0-windows-release-ci-v0.13]
-    paths:
-      - '.github/workflows/cloudplay-upstream-build.yml'
   workflow_dispatch:
     inputs:
       build_native_linux:

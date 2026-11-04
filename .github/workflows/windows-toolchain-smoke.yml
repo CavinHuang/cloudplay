@@ -2,7 +2,7 @@ name: CloudPlay Windows toolchain smoke
 # Fast, real Windows command-shim compatibility gate; no GPU or credentials.
 on:
   push:
-    branches: [feat/p0-windows-release-ci-v0.13]
+    branches: [main]
     paths:
       - '.github/workflows/windows-toolchain-smoke.yml'
       - 'scripts/p0/check-moonlight-toolchain.mjs'

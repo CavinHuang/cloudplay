@@ -2,15 +2,16 @@ name: Build complete Windows offline deployment bundle
 # The build runner is online. The published artifact runs offline on the GPU host.
 # This is a BUILD WORKFLOW, not a Windows GPU media acceptance test.
 on:
+  workflow_dispatch:
   push:
-    branches: [feat/p0-windows-release-ci-v0.13]
+    branches: [main]
+    tags: ['v*']
     paths:
       - '.github/workflows/offline-windows-release.yml'
+      - 'scripts/release/**'
       - 'scripts/p0/**'
       - 'lib/lab/moonlight-toolchain.mjs'
-      - 'scripts/release/**'
-      - 'tests/release-nested-manifest.test.mjs'
-  workflow_dispatch:
+
 concurrency:
   group: cloudplay-windows-offline-${{ github.ref }}
   cancel-in-progress: true
@@ -138,3 +139,23 @@ jobs:
         run: |
           & .\release\deploy\smoke-windows-offline.ps1 -BundlePath .\release
           if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Offline smoke failed' }
+
+  offline-install-acceptance:
+    name: Clean-host install, upgrade and rollback
+    needs: offline-bundle-smoke
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Download release from this workflow
+        uses: actions/download-artifact@v4
+        with:
+          name: CloudPlay-Windows-Offline-v0.12.0
+          path: release
+      - name: Exercise installed release slots with bundled Node only
+        shell: pwsh
+        run: |
+          & .\scripts\release\smoke-windows-install.ps1 -BundlePath .\release
+          if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Windows installation acceptance failed' }
