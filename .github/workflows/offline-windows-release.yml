@@ -34,8 +34,8 @@ jobs:
         id: cloud-node
         shell: pwsh
         run: |
-          $home=Split-Path (Get-Command node).Source -Parent
-          "home=$home" >> $env:GITHUB_OUTPUT
+          $nodeHome=Split-Path (Get-Command node).Source -Parent
+          "home=$nodeHome" >> $env:GITHUB_OUTPUT
       - name: Build and test CloudPlay website
         shell: pwsh
         working-directory: cloudplay
