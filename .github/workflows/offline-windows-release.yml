@@ -6,6 +6,8 @@ on:
     branches: [feat/p0-windows-release-ci-v0.13]
     paths:
       - '.github/workflows/offline-windows-release.yml'
+      - 'scripts/p0/**'
+      - 'lib/lab/moonlight-toolchain.mjs'
   workflow_dispatch:
 concurrency:
   group: cloudplay-windows-offline-${{ github.ref }}
