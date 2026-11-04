@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {versionTuple,compareVersions,checkMoonlightVersions} from '../lib/lab/moonlight-toolchain.mjs';
+import {versionTuple,compareVersions,checkMoonlightVersions,npmVersionInvocation} from '../lib/lab/moonlight-toolchain.mjs';
 
 test('Moonlight pinned source has a separate >=26.4 Node and npm >=11.17 build gate',()=>{
  assert.deepEqual(versionTuple('v26.4.0'),[26,4,0]);
@@ -21,4 +21,9 @@ test('PowerShell upstream runner is pinned, dry-runs before modification and gat
   assert.ok(script.includes(essential),essential);
  }
  assert.match(script,/if\(-not \$Build\)/);
+});
+
+test('npm version lookup uses cmd.exe for Windows shims and direct npm on Unix',()=>{
+ assert.deepEqual(npmVersionInvocation('win32'),{command:'cmd.exe',args:['/d','/s','/c','npm --version']});
+ assert.deepEqual(npmVersionInvocation('linux'),{command:'npm',args:['--version']});
 });
