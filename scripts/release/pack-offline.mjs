@@ -56,7 +56,8 @@ function listFiles(root,cur=root,out=[]) {
 }
 const hash = f => createHash('sha256').update(fs.readFileSync(f)).digest('hex');
 function atomicManifest(out,mode,metadata={}) {
-  const files=listFiles(out).filter(f=>path.basename(f)!=='manifest.json').map(f=>({
+  const rootManifest=path.join(out,'manifest.json');
+  const files=listFiles(out).filter(f=>f!==rootManifest).map(f=>({
     path:path.relative(out,f).split(path.sep).join('/'), bytes:fs.statSync(f).size, sha256:hash(f)
   }));
   const manifest={schema:'cloudplay.offline.v1',cloudplayVersion:'0.12.0',mode,createdAt:new Date().toISOString(),
