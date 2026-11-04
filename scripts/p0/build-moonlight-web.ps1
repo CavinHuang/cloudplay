@@ -51,7 +51,7 @@ if($LASTEXITCODE -ne 0 -or $wasmVersion -notmatch '(?<!\d)0\.2\.128(?!\d)'){
 }
 
 if(-not $FrontendOnly) {
-$rustTargets=(& rustup target list --installed) -join "`n"
+$rustTargets=(& rustup target list --installed --toolchain 1.99.0) -join "`n"
 if($LASTEXITCODE -ne 0 -or $rustTargets -notmatch [regex]::Escape($gnu)) {
   throw "Missing Rust GNU target $gnu. Install rustup, target, and MinGW toolchain before building."
 }
