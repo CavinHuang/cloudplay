@@ -46,7 +46,7 @@ jobs:
       - name: Install required WebAssembly Rust target
         run: rustup target add wasm32-unknown-unknown
       - name: Setup wasm-bindgen-cli
-        run: cargo install wasm-bindgen-cli --locked
+        run: cargo install wasm-bindgen-cli --version 0.2.128 --locked
       - name: Validate upstream version and install CloudPlay bridge
         run: |
           node cloudplay/scripts/p0/check-moonlight-toolchain.mjs
