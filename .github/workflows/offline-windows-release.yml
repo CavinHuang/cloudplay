@@ -8,6 +8,8 @@ on:
       - '.github/workflows/offline-windows-release.yml'
       - 'scripts/p0/**'
       - 'lib/lab/moonlight-toolchain.mjs'
+      - 'scripts/release/**'
+      - 'tests/release-nested-manifest.test.mjs'
   workflow_dispatch:
 concurrency:
   group: cloudplay-windows-offline-${{ github.ref }}
@@ -119,3 +121,20 @@ jobs:
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
+
+  offline-bundle-smoke:
+    name: Clean Windows offline startup verification
+    needs: windows-offline-bundle
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download actual build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: CloudPlay-Windows-Offline-v0.12.0
+          path: release
+      - name: Verify bundled Node, native Moonlight and Next startup with clean PATH
+        shell: pwsh
+        run: |
+          & .\release\deploy\smoke-windows-offline.ps1 -BundlePath .\release
+          if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Offline smoke failed' }
