@@ -30,7 +30,7 @@ function Get-SlotStatus {
   return ($raw | ConvertFrom-Json)
 }
 function Same($actual,$expected,[string]$reason){
-  if($actual -ne $expected){throw "$reason: got [$actual], expected [$expected]"}
+  if($actual -ne $expected){throw "${reason}: got [$actual], expected [$expected]"}
 }
 function Rejected([string[]]$Invocation,[string]$reason){
   & $node @Invocation 2>$null | Out-Null
