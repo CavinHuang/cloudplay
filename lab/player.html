@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CloudPlay — P0 本机游戏窗口</title>
+<style>
+:root{color-scheme:dark;--bg:#080b15;--panel:#131a2a;--stroke:#30384e;--text:#eff5ff;--muted:#a0adbf;--blue:#75bfff;--good:#7ce6a5;--warn:#ecca81}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.6 system-ui,Segoe UI,'Microsoft YaHei',sans-serif}button,input,a{font:inherit}a{color:#91cfff}main{max-width:1540px;padding:18px 22px 36px;margin:auto}.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:20px}.brand{font-weight:850;letter-spacing:1.6px}.tiny{font-size:11px;color:var(--muted)}.headline{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:14px;flex-wrap:wrap}.headline h1{font-size:clamp(22px,3vw,34px);margin:0}.headline p{color:var(--muted);margin:0}.status{border:1px solid var(--stroke);padding:6px 11px;border-radius:4px;color:var(--warn)}.stage{background:#080d18;border:1px solid var(--stroke);border-radius:9px;overflow:hidden;position:relative;aspect-ratio:16 / 9;min-height:260px}.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#080d18}.placeholder{position:absolute;inset:0;display:grid;place-items:center;text-align:center;background:radial-gradient(circle at 45% 30%,#263753 0,#0b1020 50%,#070b13 100%);padding:30px}.placeholder h2{font-size:clamp(21px,3vw,32px);margin:8px 0}.placeholder p{color:var(--muted);max-width:570px;margin:0 auto}.symbol{font-size:58px;color:var(--blue)}.toolbar,.auth{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:13px 0}.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid #4c6888;background:#182539;color:var(--text);border-radius:5px;padding:10px 15px;cursor:pointer;text-decoration:none;font-weight:650}.btn.primary{background:#87cdfa;color:#0c1b2a;border-color:#87cdfa}.btn:disabled{opacity:.45;cursor:not-allowed}input[type=password]{background:#151c2c;color:#fff;border:1px solid #3c4960;padding:10px 12px;border-radius:5px;min-width:240px;flex:1;max-width:420px}.info{display:grid;grid-template-columns:1fr 1fr;gap:13px}.panel{padding:17px;border:1px solid var(--stroke);background:var(--panel);border-radius:8px}.panel h3{margin:0 0 10px;font-size:16px}.panel p{color:var(--muted);margin:7px 0}.spec{display:flex;gap:10px;justify-content:space-between;border-bottom:1px solid #2b3446;padding:8px 0}.spec strong{color:var(--blue)}.checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.checks label{background:#101828;padding:10px;display:flex;align-items:center;gap:9px;cursor:pointer;border:1px solid #273550;border-radius:5px}.checks input{accent-color:#87cdfa}.warn{border-left:3px solid var(--warn);background:#2a251e;color:#f2d8a0;padding:11px 15px;margin:15px 0;border-radius:4px}.muted{color:var(--muted)}.media-good{color:var(--good)}.media-bad{color:var(--warn)}.media-note{font-size:12px;color:var(--muted)}.notice{font-size:12px;color:var(--muted)}@media(max-width:850px){main{padding:15px 12px}.info{grid-template-columns:1fr}.stage{aspect-ratio:auto;height:240px;min-height:240px}.checks{grid-template-columns:1fr}.top{align-items:start}.btn{padding:9px 11px}}
+</style></head>
+<body><main><header class="top"><span class="brand">◉ CLOUDPLAY <span class="tiny">/ P0 PLAYER</span></span><a href="/monitor">← 返回实验控制台</a></header>
+<div class="headline"><div><h1>本机 Web 云游戏窗口</h1><p>将独立的 Moonlight Web 客户端接入一个受控实验会话；不伪造视频画面或连接指标。</p></div><span class="status" id="state">等待认证</span></div>
+<section class="auth"><input id="token" type="password" autocomplete="off" aria-label="P0 本机密钥" placeholder="粘贴 .p0-lab-token"><button class="btn primary" type="button" id="connect">连接当前会话</button><button class="btn" type="button" id="disconnect">断开</button></section>
+<div class="stage" id="stage"><div class="placeholder" id="placeholder"><div><div class="symbol">▣</div><h2>等待真实串流</h2><p>游戏进程启动不等于完成 Sunshine 配对或收到 WebRTC 视频流。请先连接会话，再启动 Moonlight Web。</p></div></div><iframe id="stream" title="Moonlight Web 独立认证游戏界面" allow="autoplay; fullscreen; gamepad" allowfullscreen hidden></iframe></div>
+<nav class="toolbar"><button class="btn primary" type="button" id="embed" disabled>在此打开 Moonlight Web</button><a class="btn" id="external" target="_blank" rel="noopener noreferrer" aria-label="独立标签页打开 Moonlight Web">在新标签页打开 ↗</a><a class="btn" href="/diagnostics" target="_blank" rel="noopener noreferrer">检测浏览器与手柄 ↗</a><button class="btn" type="button" id="fullscreen" disabled>⛶ 全屏</button><button class="btn" type="button" id="retry" disabled>重新加载媒体页面</button><button class="btn" type="button" id="stop" disabled>停止本机游戏</button><span class="tiny">配对、登录和媒体传输由 Moonlight Web 负责</span></nav>
+<div class="warn"><strong>重要：</strong>嵌入模式可能被独立客户端的跨站策略阻止；请改用“在新标签页打开”。如果 Agent 已启动 SuperTuxKart，Moonlight Web 中请选择 Sunshine 的 <strong>Desktop</strong> 条目连接现有游戏，避免再启动第二个进程。未经修改的 Moonlight Web 无法向此页面开放真实媒体统计。可选诊断桥接只能安装在实际 Moonlight Web 客户端代码内部，不会绕过同源策略，也不能确认画面内容是否黑屏。</div>
+<div class="info"><section class="panel"><h3>会话与主机状态</h3><div class="spec"><span>会话 ID</span><strong id="sid">未验证</strong></div><div class="spec"><span>控制链路</span><strong id="control">未连接</strong></div><div class="spec"><span>进程状态</span><strong id="process">未知</strong></div><div class="spec"><span>WebRTC 媒体诊断</span><strong id="media-state">未接入客户端统计</strong></div><div class="spec"><span>解码视频帧</span><strong id="media-frames">无实际数据</strong></div><div class="spec"><span>视频帧率</span><strong id="media-fps">无实际数据</strong></div><div class="spec"><span>音频接收</span><strong id="media-audio">无实际数据</strong></div><div class="spec"><span>ICE / 连接状态</span><strong id="media-ice">无实际数据</strong></div><div class="spec"><span>候选对 RTT</span><strong id="media-rtt">无实际数据</strong></div><p class="media-note" id="media-advice">需要可选的 Moonlight Web 客户端诊断桥接才能读取实际 WebRTC 统计。未安装桥接时保持“未检测”。</p><p id="feedback" role="status">输入仅保存在此页面的内存中，不会写入浏览器存储。</p></section>
+<section class="panel"><h3>P0-03 实机手动验收</h3><p>以下勾选仅代表操作者自己观察到的现象，不等于平台已通过自动媒体检测。</p><div class="checks"><label><input type="checkbox" id="video"> 看到了持续变化的实际游戏画面</label><label><input type="checkbox" id="audio"> 听到了游戏声音</label><label><input type="checkbox" id="input"> 键盘/鼠标或手柄成功控制游戏</label><label><input type="checkbox" id="exit"> 游戏退出后资源已回收</label></div><div class="toolbar"><button class="btn" id="export" type="button">导出人工验收记录 JSON</button><button class="btn" id="export-media" type="button">导出实际媒体采样证据 JSON</button></div><p class="notice">人工记录需补充本机截图路径；媒体采样可单独执行 <code>node scripts/p0/verify-media-evidence.mjs media-evidence.json</code>。人工记录执行 <code>npm run p0:verify -- evidence.json</code>。脚本只验证文件与人工声明，不能替代真实媒体检测。</p></section></div>
+</main>
+<script type="module">
+import {MEDIA_PROTOCOL,createMediaObserver} from '/assets/media-telemetry.mjs';
+import {createMediaEvidenceRecorder} from '/assets/media-evidence.mjs';
+const SESSION='__SESSION_ID__';let token='',timer=null,handoff=null,current=null,opening=false,mediaObserver=null,mediaChallenge=null,bridgeTimer=null;
+const evidenceRecorder=createMediaEvidenceRecorder({sessionId:SESSION});
+const el=id=>document.getElementById(id);
+function feedback(message){el('feedback').textContent=message}
+function setMediaReport(report){
+ el('media-state').textContent=report?.state||'未接入客户端统计';
+ el('media-frames').textContent=report?.stats?.video?.framesDecoded??'无实际数据';
+ el('media-fps').textContent=report?.stats?.video?.framesPerSecond??'无实际数据';
+ el('media-audio').textContent=report?.stats?.audio?.bytesReceived==null?'无实际数据':`${report.stats.audio.bytesReceived} 字节接收；不能证明可听`;
+ el('media-ice').textContent=report?.stats?`${report.stats.iceConnectionState} / ${report.stats.connectionState}`:'无实际数据';
+ el('media-rtt').textContent=report?.stats?.network?.roundTripTimeMs==null?'无实际数据':`${report.stats.network.roundTripTimeMs} ms（非操作延迟）`;
+ el('media-advice').textContent=report?.advice||'未经修改的 Moonlight Web 无法提供这些统计；也无法自动判定黑屏、声音可听或输入到达游戏。';
+}
+function closeEmbeddedMedia(){
+ clearInterval(bridgeTimer);bridgeTimer=null;mediaObserver=null;mediaChallenge=null;
+ const frame=el('stream');frame.hidden=true;frame.src='about:blank';el('placeholder').hidden=false;
+ el('retry').disabled=true;el('fullscreen').disabled=true;setMediaReport(null);opening=false;
+}
+function openEmbeddedMedia(){
+ if(!handoff)return;
+ closeEmbeddedMedia();evidenceRecorder.clear();opening=true;
+ const frame=el('stream');frame.hidden=false;frame.src=handoff.url;el('placeholder').hidden=true;
+ el('fullscreen').disabled=false;el('retry').disabled=false;
+ const challenge=new Uint8Array(16);crypto.getRandomValues(challenge);
+ mediaChallenge=Array.from(challenge,v=>v.toString(16).padStart(2,'0')).join('');
+ const origin=new URL(handoff.url).origin;
+ mediaObserver=createMediaObserver({sessionId:SESSION,origin,source:frame.contentWindow,nonce:mediaChallenge});
+ const hello=()=>{
+  if(!mediaObserver||!el('stream').contentWindow)return;
+  el('stream').contentWindow.postMessage({protocol:MEDIA_PROTOCOL,type:'hello',sessionId:SESSION,challenge:mediaChallenge},origin);
+  setMediaReport(mediaObserver.snapshot());
+ };
+ frame.addEventListener('load',hello,{once:true});bridgeTimer=setInterval(hello,1800);
+ feedback('已加载独立 Moonlight Web 页面。只有可选诊断桥接集成进客户端源码后，才会看到实际 WebRTC 解码帧和连接数据。');
+}
+window.addEventListener('message',event=>{
+ if(mediaObserver?.observe(event)){
+  if(event.data?.type==='stats'){evidenceRecorder.add(mediaObserver.snapshot().stats);}
+  setMediaReport(mediaObserver.snapshot());
+ }
+});
+setInterval(()=>{if(mediaObserver)setMediaReport(mediaObserver.snapshot());},1200);
+async function api(path,method='GET'){
+ const response=await fetch(path,{method,headers:{Authorization:'Bearer '+token},cache:'no-store'});
+ const payload=await response.json();if(!response.ok)throw new Error(payload.code||'HTTP '+response.status);return payload;
+}
+async function refresh(){if(!token)return;try{
+ const s=(await api('/internal/lab/sessions/'+SESSION)).session;current=s;
+ el('sid').textContent=SESSION.slice(0,8);el('state').textContent=s.state;el('process').textContent=s.state+(s.reason?' / '+s.reason:'');el('control').textContent='本机协调器已认证';
+ el('stop').disabled=['finished','cancelled'].includes(s.state);
+ try{const result=await api('/internal/lab/sessions/'+SESSION+'/stream-handoff');handoff=result;
+  el('embed').disabled=false;el('external').href=result.url;feedback('游戏进程已进入可连接阶段。Moonlight Web 仍需独立登录、PIN 配对及视频连接。');
+ }catch(e){handoff=null;el('embed').disabled=true;el('external').removeAttribute('href');if(opening)closeEmbeddedMedia();feedback('串流入口尚不可用：'+e.message)}
+}catch(e){el('state').textContent='连接失败';el('control').textContent=e.message;el('embed').disabled=true;handoff=null;if(opening)closeEmbeddedMedia();feedback('本机控制状态不可用，请返回 P0 监控页检查')}}
+el('connect').addEventListener('click',()=>{if(opening)closeEmbeddedMedia();token=el('token').value.trim();el('token').value='';clearInterval(timer);if(!token)return;refresh();timer=setInterval(refresh,5000)});
+el('disconnect').addEventListener('click',()=>{closeEmbeddedMedia();evidenceRecorder.clear();token='';clearInterval(timer);el('control').textContent='已断开';el('embed').disabled=true;el('stop').disabled=true;el('external').removeAttribute('href');handoff=null;feedback('已清除页面内存中的 Token。')});
+el('embed').addEventListener('click',openEmbeddedMedia);
+el('retry').addEventListener('click',openEmbeddedMedia);
+el('fullscreen').addEventListener('click',()=>el('stage').requestFullscreen?.().catch(()=>feedback('浏览器拒绝全屏，请检查权限')));
+el('stop').addEventListener('click',async()=>{if(!token||!current)return;el('stop').disabled=true;try{await api('/internal/lab/sessions/'+SESSION,'DELETE');feedback('已发出停止请求，等待 Agent 反馈实际进程退出。');await refresh()}catch(e){feedback('停止失败：'+e.message);el('stop').disabled=false}});
+function downloadJson(name,report){
+ const blob=new Blob([JSON.stringify(report,null,2)+'\n'],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),500);
+}
+el('export-media').addEventListener('click',()=>{
+ const report=evidenceRecorder.export();
+ downloadJson('cloudplay-p0-'+SESSION.slice(0,8)+'-media-evidence.json',report);
+ feedback(report.assessment.transportObserved?'已导出接收到的视频帧统计（不证明画面内容或操控成功）。':'已导出媒体采样；尚无足够视频帧进展证据。');
+});
+el('export').addEventListener('click',()=>{
+ const report={game:'supertuxkart',sessionId:SESSION,observedAt:new Date().toISOString(),network:'local-machine',browserSecureContext:window.isSecureContext,
+ videoObserved:el('video').checked,audioObserved:el('audio').checked,keyboardOrControllerObserved:el('input').checked,successfulExitObserved:el('exit').checked,
+ screenshotPath:'',mediaDiagnostics:mediaObserver?.snapshot()||{state:'not-instrumented',mediaVerified:false},notes:'Operator observations and optional cooperative client statistics are distinct; screenshot and actual gameplay are not automatically verified.'};
+ downloadJson('cloudplay-p0-'+SESSION.slice(0,8)+'-manual-evidence.json',report);
+ feedback('已下载人工验收记录。请在本机补充截图路径后，再执行 verify-evidence。');
+});
+</script></body></html>

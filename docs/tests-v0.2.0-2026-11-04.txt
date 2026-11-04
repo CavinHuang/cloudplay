@@ -1,0 +1,176 @@
+
+> cloudplay-web@0.2.0 test
+> node --test tests/*.test.mjs
+
+TAP version 13
+# Subtest: health reports catalog but no real GPU / auth
+ok 1 - health reports catalog but no real GPU / auth
+  ---
+  duration_ms: 36.717831
+  type: 'test'
+  ...
+# Subtest: hosts and sessions are empty until real provider
+ok 2 - hosts and sessions are empty until real provider
+  ---
+  duration_ms: 1.274506
+  type: 'test'
+  ...
+# Subtest: POST session cannot claim success without provider
+ok 3 - POST session cannot claim success without provider
+  ---
+  duration_ms: 2.581646
+  type: 'test'
+  ...
+# Subtest: reject malformed and non-json session requests
+ok 4 - reject malformed and non-json session requests
+  ---
+  duration_ms: 2.210931
+  type: 'test'
+  ...
+# Subtest: catalog returns free games with accurate metadata
+ok 5 - catalog returns free games with accurate metadata
+  ---
+  duration_ms: 1.713964
+  type: 'test'
+  ...
+# Subtest: only native candidates in candidate filter
+ok 6 - only native candidates in candidate filter
+  ---
+  duration_ms: 1.923265
+  type: 'test'
+  ...
+# Subtest: text filtering, genre and controller compose
+ok 7 - text filtering, genre and controller compose
+  ---
+  duration_ms: 0.40981
+  type: 'test'
+  ...
+# Subtest: no unknown title is auto available
+ok 8 - no unknown title is auto available
+  ---
+  duration_ms: 0.653554
+  type: 'test'
+  ...
+# Subtest: all cloud games are gated
+ok 9 - all cloud games are gated
+  ---
+  duration_ms: 0.282881
+  type: 'test'
+  ...
+# Subtest: coordinator requires a strong token
+ok 10 - coordinator requires a strong token
+  ---
+  duration_ms: 2.144608
+  type: 'test'
+  ...
+# Subtest: heartbeat validates types; cannot set streamVerified in payload
+ok 11 - heartbeat validates types; cannot set streamVerified in payload
+  ---
+  duration_ms: 0.492469
+  type: 'test'
+  ...
+# Subtest: coordinator denies anonymous or incorrect token
+ok 12 - coordinator denies anonymous or incorrect token
+  ---
+  duration_ms: 88.465826
+  type: 'test'
+  ...
+# Subtest: coordinator accepts real agent heartbeat but never marks stream verified
+ok 13 - coordinator accepts real agent heartbeat but never marks stream verified
+  ---
+  duration_ms: 37.245077
+  type: 'test'
+  ...
+# Subtest: stale heartbeats expire and no stale host is reported
+ok 14 - stale heartbeats expire and no stale host is reported
+  ---
+  duration_ms: 15.965424
+  type: 'test'
+  ...
+# Subtest: missing game, GPU or Sunshine yields incomplete infrastructure
+ok 15 - missing game, GPU or Sunshine yields incomplete infrastructure
+  ---
+  duration_ms: 11.153778
+  type: 'test'
+  ...
+# Subtest: Next status client strips host identifiers and model
+ok 16 - Next status client strips host identifiers and model
+  ---
+  duration_ms: 14.553259
+  type: 'test'
+  ...
+# Subtest: status client fails closed for missing coordinator
+ok 17 - status client fails closed for missing coordinator
+  ---
+  duration_ms: 0.227004
+  type: 'test'
+  ...
+# Subtest: host agent only accepts 127.0.0.1 lab coordinator
+ok 18 - host agent only accepts 127.0.0.1 lab coordinator
+  ---
+  duration_ms: 0.59311
+  type: 'test'
+  ...
+# Subtest: agent local diagnostic handles missing nvidia-smi without crashing
+ok 19 - agent local diagnostic handles missing nvidia-smi without crashing
+  ---
+  duration_ms: 0.707413
+  type: 'test'
+  ...
+# Subtest: malformed heartbeat fails with stable error
+ok 20 - malformed heartbeat fails with stable error
+  ---
+  duration_ms: 7.067392
+  type: 'test'
+  ...
+# Subtest: standalone P0 monitor is served but state remains authenticated
+ok 21 - standalone P0 monitor is served but state remains authenticated
+  ---
+  duration_ms: 7.439708
+  type: 'test'
+  ...
+# Subtest: preflight fails closed when host and streaming provider missing
+ok 22 - preflight fails closed when host and streaming provider missing
+  ---
+  duration_ms: 2.150915
+  type: 'test'
+  ...
+# Subtest: cannot bypass rights and installation by supplying healthy host
+ok 23 - cannot bypass rights and installation by supplying healthy host
+  ---
+  duration_ms: 3.9301
+  type: 'test'
+  ...
+# Subtest: unknown game rejected
+ok 24 - unknown game rejected
+  ---
+  duration_ms: 0.211998
+  type: 'test'
+  ...
+# Subtest: state machine supports a complete lifecycle
+ok 25 - state machine supports a complete lifecycle
+  ---
+  duration_ms: 5.055453
+  type: 'test'
+  ...
+# Subtest: cannot jump directly into streaming or restart a finished session
+ok 26 - cannot jump directly into streaming or restart a finished session
+  ---
+  duration_ms: 1.607955
+  type: 'test'
+  ...
+# Subtest: reconnection path returns to streaming
+ok 27 - reconnection path returns to streaming
+  ---
+  duration_ms: 0.816125
+  type: 'test'
+  ...
+1..27
+# tests 27
+# suites 0
+# pass 27
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 390.678669

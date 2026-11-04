@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CloudPlay — P0 本地主机诊断</title>
+<style>
+:root{color-scheme:dark;--bg:#090b15;--surface:#151a29;--stroke:#30384e;--text:#f0f4ff;--muted:#99a6bc;--blue:#65bafd;--good:#5ee0a2;--bad:#f1be7c}
+*{box-sizing:border-box}html,body{background:var(--bg);font:14px/1.5 system-ui,Segoe UI,'Microsoft YaHei',sans-serif;color:var(--text);margin:0}main{max-width:1050px;margin:auto;padding:27px 26px 80px}.header{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #242b3c;padding-bottom:24px}.logo{font-weight:850;letter-spacing:2px}.mini{color:var(--blue);font-size:11px;font-weight:700;margin-left:10px}.sub{color:var(--muted)}.tag{border:1px solid #414d63;border-radius:5px;padding:5px 9px;font-size:12px}.heading{margin:36px 0 22px}h1{font-size:clamp(29px,5vw,45px);line-height:1.1;margin:0 0 13px}h2{font-size:17px;margin:0 0 16px}.panel{border:1px solid var(--stroke);background:var(--surface);padding:23px;border-radius:10px;margin-bottom:19px}.auth{display:flex;gap:9px;flex-wrap:wrap}input{background:#0e1320;border:1px solid #3e4b64;border-radius:6px;color:white;padding:11px 12px;flex:1;min-width:230px;font:inherit}button,.link{background:var(--blue);border:0;padding:11px 17px;border-radius:6px;color:#071425;font-weight:750;font:inherit;cursor:pointer}button:hover{filter:brightness(1.1)}button.secondary,.link{background:#283247;color:#dbe7ff;text-decoration:none}.buttons{display:flex;gap:10px;flex-wrap:wrap}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.check{padding:17px;background:#0e1422;border-radius:7px;border:1px solid #30394d}.check .state{display:block;margin-top:11px;font-size:14px;font-weight:800;color:var(--bad)}.check .state.good{color:var(--good)}.warning{padding:17px;border:1px solid #6d5734;border-radius:7px;background:#33271b;color:#f1d7a9;line-height:1.8}.foot{font-size:12px;color:var(--muted);margin-top:16px}.status-text{margin-top:13px;color:var(--muted)}.session-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}.session-id{font:12px ui-monospace,monospace;color:var(--muted);overflow-wrap:anywhere}.statebox{background:#0c1425;border:1px solid #33405a;border-radius:8px;padding:14px;margin-top:12px}.statebox strong{color:var(--blue)}.instructions{color:var(--muted);font-size:13px}button:disabled{opacity:.43;cursor:not-allowed}@media(max-width:750px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:20px 16px 65px}.header{align-items:start}.panel{padding:17px}}
+</style></head>
+<body><main><div class="header"><div><span class="logo">◉ CLOUDPLAY</span><span class="mini">P0 LAB</span></div><span class="tag">127.0.0.1 · LOCAL ONLY</span></div>
+<section class="heading"><div class="mini" style="margin:0 0 12px">HOST INTEGRATION</div><h1>本地主机与串流检查</h1><p class="sub">直接连接 Host Agent 的状态服务。主机心跳≠游戏可玩，必须再单独验证实时画面、音频和操作。</p></section>
+<section class="panel"><h2>连接诊断服务</h2><div class="auth"><input id="token" type="password" autocomplete="off" aria-label="本地联调 Token" placeholder="粘贴 .p0-lab-token 中的 Token"><button id="connect" type="button">连接本地主机</button><button class="secondary" id="clear" type="button">断开</button></div><div id="connection" class="status-text" role="status">等待连接；Token 只保留在当前页面内存，不存储到浏览器。</div></section>
+<section class="panel"><h2>基础检查 <small class="sub">（端口状态无法识别服务身份）</small></h2><div class="grid"><div class="check">GPU / nvidia-smi<span class="state" id="gpu">未上报</span></div><div class="check">TCP 47990<span class="state" id="sunshine">未上报</span></div><div class="check">TCP 8080<span class="state" id="web">未上报</span></div><div class="check">游戏 EXE 路径<span class="state" id="game">未上报</span></div></div><div class="foot" id="seen">最后心跳：无</div></section>
+<section class="panel"><h2>本机测试会话 <small class="sub">（仅限已授权的 SuperTuxKart 本机验证）</small></h2>
+<p class="instructions">默认关闭；需要以 <code>-EnableLocalLaunch -GamePath "C:\Games\SuperTuxKart\supertuxkart.exe"</code> 显式启动 P0 Lab。这里仅负责启动/停止游戏进程；游戏画面仍须在独立的 Moonlight Web 页面中登录、配对和验证。</p>
+<div class="session-row"><button id="launch" type="button" disabled>启动本机游戏进程</button><button class="secondary" id="stop" type="button" disabled>停止当前会话</button><a class="link" id="open-player" href="#" style="opacity:.45;pointer-events:none" target="_blank" rel="noopener noreferrer">进入 Web 播放器 ↗</a><span class="tag" id="launch-enable">启动功能未配置</span></div>
+<div id="session-summary" class="statebox" role="status"><strong>尚无会话</strong><div class="session-id">尚未运行游戏；网页上不展示模拟视频。</div></div>
+<p class="foot" id="session-feedback">启动前请确认已安装 Sunshine、Moonlight Web，并且具有游戏本地使用权。请勿在公网上提供此实验接口。</p></section>
+<section class="warning"><strong>真正的 P0-03 成功门槛</strong>：在 Moonlight Web Stream 中通过 PIN 配对 Sunshine，启动 SuperTuxKart，确认正在变化的视频、音频、键鼠/手柄输入、正常退出，并保存真实测试记录。这里的四项检查全绿仍不代表真实串流已通过。</section>
+<div class="buttons" style="margin-top:20px"><a class="link" href="/diagnostics" target="_blank" rel="noopener noreferrer">浏览器与手柄诊断</a><a class="link" href="http://localhost:8080/" target="_blank" rel="noopener noreferrer">打开 Moonlight Web</a><a class="link" href="https://localhost:47990/" target="_blank" rel="noopener noreferrer">打开 Sunshine 管理页</a></div>
+<p class="foot">P0 仅限本机 / 私有局域网。不应把 Sunshine 管理端口或实验接口直接暴露到互联网。</p></main>
+<script>
+let token='',timer=null,hostId=null,sessionId=null,canLaunch=false,canRecoverStop=false;
+const el=id=>document.getElementById(id);
+function set(id,value){el(id).textContent=value?'端口/项目已检测':'未检测到';el(id).className='state'+(value?' good':'')}
+function reset(){hostId=null;canLaunch=false;el('launch').disabled=true;el('stop').disabled=true;for(const id of ['gpu','sunshine','web','game']){el(id).textContent='未上报';el(id).className='state'}el('seen').textContent='最后心跳：无'}
+function showSession(s){
+  sessionId=s?.id||null;
+  const open=el('open-player');const connectable=Boolean(s&&['starting','connecting','reconnecting'].includes(s.state));
+  open.href=connectable?('/play/'+encodeURIComponent(s.id)):'#';open.style.opacity=connectable?'1':'.45';open.style.pointerEvents=connectable?'auto':'none';
+  const summary=el('session-summary');summary.replaceChildren();
+  const strong=document.createElement('strong');strong.textContent=s?('会话状态：'+s.state):'尚无会话';summary.append(strong);
+  const detail=document.createElement('div');detail.className='session-id';
+  detail.textContent=s?`${s.gameId} · ${s.id} · ${s.reason||'无附加状态'} · 视频未验证`:'尚未运行游戏；网页上不展示模拟视频。';summary.append(detail);
+  el('stop').disabled=!token||!s||['finished','cancelled'].includes(s.state)||(s.state==='failed'&&!canRecoverStop);
+}
+async function load(){if(!token)return;try{
+  const res=await fetch('/internal/status',{headers:{Authorization:'Bearer '+token},cache:'no-store'});
+  if(!res.ok)throw Error('HTTP '+res.status);
+  const s=await res.json(),h=s.hosts?.[0];
+  el('connection').textContent=s.connected?'已收到认证心跳；以下仅为设备/端口检测':'未收到有效心跳或心跳已过期';
+  canLaunch=Boolean(s.localLaunchEnabled);hostId=h?.hostId||null;
+  canRecoverStop=Boolean(h?.activeGame?.state==='running'&&s.sessions?.some(v=>v.state==='failed'&&v.id===h.activeGame.sessionId));
+  el('launch-enable').textContent=canLaunch?'本机启动已启用':'本机启动默认关闭';
+  el('launch').disabled=!canLaunch||!h?.infrastructureReady||Boolean((s.sessions||[]).some(v=>['starting','connecting','reconnecting','stopping'].includes(v.state)));
+  const sessions=s.sessions||[];showSession(sessions.at(-1)||null);
+  if(!h){reset();return}
+  set('gpu',h.gpu?.detected);set('sunshine',h.sunshinePortOpen);set('web',h.webStreamPortOpen);set('game',h.gameFilePresent);
+  el('seen').textContent='最后心跳：'+new Date(h.lastSeenAt).toLocaleString()+'；实际视频：尚未验证';
+}catch(e){el('connection').textContent='联调服务读取失败：'+e.message;reset()}}
+async function action(method,path,body){
+ if(!token)throw Error('请先连接本机协调器');
+ const response=await fetch(path,{method,headers:{Authorization:'Bearer '+token,...(body?{'content-type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});
+ const result=await response.json();if(!response.ok)throw Error(result.code||('HTTP '+response.status));return result;
+}
+el('launch').addEventListener('click',async()=>{
+ if(!canLaunch||!hostId)return;
+ el('launch').disabled=true;
+ try{const r=await action('POST','/internal/lab/sessions',{gameId:'supertuxkart',hostId});
+  el('session-feedback').textContent='已接受本地测试启动命令。请使用 Moonlight Web 登录并选择 Sunshine 应用/桌面进行串流；不代表视频已建立。';showSession(r.session);
+ }catch(e){el('session-feedback').textContent='启动失败：'+e.message}finally{await load()}
+});
+el('stop').addEventListener('click',async()=>{
+ if(!sessionId)return;const id=sessionId;el('stop').disabled=true;
+ try{await action('DELETE','/internal/lab/sessions/'+encodeURIComponent(id));el('session-feedback').textContent='停止指令已发送，请观察 Agent 确认停止。';}
+ catch(e){el('session-feedback').textContent='停止失败：'+e.message}finally{await load()}
+});
+el('connect').addEventListener('click',()=>{token=el('token').value;el('token').value='';clearInterval(timer);load();timer=setInterval(load,7000)});
+el('clear').addEventListener('click',()=>{token='';clearInterval(timer);reset();showSession(null);el('connection').textContent='已断开'});
+</script></body></html>

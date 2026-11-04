@@ -1,0 +1,67 @@
+name: CloudPlay pinned Moonlight Web integration build
+# Opt-in: compiling the Rust + TypeScript upstream can be expensive. No
+# untrusted PR may execute this workflow with secrets or GPU access.
+on:
+  workflow_dispatch:
+    inputs:
+      build_native_linux:
+        description: 'Also compile Moonlight Web native Linux server (no GPU test)'
+        type: boolean
+        required: false
+        default: false
+permissions:
+  contents: read
+jobs:
+  patched-upstream:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - name: CloudPlay source
+        uses: actions/checkout@v4
+        with:
+          path: cloudplay
+          persist-credentials: false
+      - name: Pinned Moonlight Web source
+        uses: actions/checkout@v4
+        with:
+          repository: MrCreativ3001/moonlight-web-stream
+          ref: 7b9821430e07087f459db3db9aac550e1e9c9bff
+          path: moonlight-web
+          persist-credentials: false
+      - name: Setup Node 26 for Moonlight upstream
+        uses: actions/setup-node@v4
+        with:
+          node-version: '26.4.0'
+      - name: Setup pinned-compatible npm
+        run: npm install --global npm@11.17.0 --no-audit --no-fund
+      - name: Rust toolchain info
+        run: |
+          rustup show
+          rustc --version
+          cargo --version
+      - name: Setup wasm-bindgen-cli
+        run: cargo install wasm-bindgen-cli --locked
+      - name: Validate upstream version and install CloudPlay bridge
+        run: |
+          node cloudplay/scripts/p0/check-moonlight-toolchain.mjs
+          node cloudplay/scripts/p0/integrate-moonlight-web.mjs moonlight-web --dry-run
+          node cloudplay/scripts/p0/integrate-moonlight-web.mjs moonlight-web
+      - name: Install Moonlight frontend dependencies
+        working-directory: moonlight-web
+        run: |
+          if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
+      - name: Compile upstream frontend and Rust-derived bindings
+        working-directory: moonlight-web
+        run: npm run build
+      - name: Verify telemetry exists in compiled frontend
+        run: node cloudplay/scripts/p0/check-moonlight-output.mjs moonlight-web/dist
+      - name: Native Linux server build (optional)
+        if: ${{ inputs.build_native_linux }}
+        working-directory: moonlight-web
+        run: cargo build --release
+      - name: Upload compiled frontend evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloudplay-p0-moonlight-frontend-compiled
+          path: moonlight-web/dist/
+          retention-days: 5

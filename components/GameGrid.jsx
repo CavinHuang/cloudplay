@@ -1,0 +1,21 @@
+'use client';
+import Link from 'next/link';
+import {useEffect,useMemo,useState} from 'react';
+import {listGames} from '@/lib/catalog.mjs';
+const FAVORITES_KEY='cloudplay-favorites-v1';
+const defaultFavorites=['where','fortnite','stalker','kingdom','ready','rocket','disco','supertuxkart'];
+const genres=['all','Action','Adventure','FPS','MOBA','RPG','Racing','Simulation','Sports','Strategy'];
+const platforms=['all','steam','epic','xbox','riot','native'];
+function Status({game}) {return game.collection==='candidate'?<span className="status pending">待接入</span>:game.isFree?<span className="status free">Free · 展示</span>:<span className="status neutral">需授权 · 展示</span>}
+export default function GameGrid({collection}) {
+ const [query,setQuery]=useState(''),[onlyFree,setOnlyFree]=useState(false),[controller,setController]=useState(false),[platform,setPlatform]=useState('all'),[genre,setGenre]=useState('all'),[sort,setSort]=useState('popular');
+ const [favorites,setFavorites]=useState(defaultFavorites);
+ useEffect(()=>{
+   try {const saved=localStorage.getItem(FAVORITES_KEY);if(saved){const parsed=JSON.parse(saved);if(Array.isArray(parsed))setFavorites(parsed)}} catch{}
+   const q=new URLSearchParams(window.location.search).get('q');if(q)setQuery(q);
+ },[]);
+ function toggleFavorite(id){const next=favorites.includes(id)?favorites.filter(v=>v!==id):[...favorites,id];setFavorites(next);try{localStorage.setItem(FAVORITES_KEY,JSON.stringify(next))}catch{}}
+ const items=useMemo(()=>listGames({query,free:onlyFree,controller,platform,genre,sort}).filter(g=>collection!=='mine'||favorites.includes(g.id)),[query,onlyFree,controller,platform,genre,sort,collection,favorites]);
+ const all=()=>{setQuery('');setOnlyFree(false);setController(false);setPlatform('all');setGenre('all');setSort('popular')};
+ return <section><div className="filter-row"><div className="filter-group"><label className={`filter-check ${onlyFree?'selected':''}`}><input type="checkbox" checked={onlyFree} onChange={e=>setOnlyFree(e.target.checked)}/><span className="check-square"/> Free</label><label className={`filter-check ${controller?'selected':''}`}><input type="checkbox" checked={controller} onChange={e=>setController(e.target.checked)}/><span className="check-square"/> Controller</label><select aria-label="游戏平台" value={platform} onChange={e=>setPlatform(e.target.value)}>{platforms.map(v=><option key={v} value={v}>{v==='all'?'All Platforms':v.toUpperCase()}</option>)}</select><select aria-label="游戏类型" value={genre} onChange={e=>setGenre(e.target.value)}>{genres.map(v=><option key={v} value={v}>{v==='all'?'All Genres':v}</option>)}</select><select aria-label="排序" value={sort} onChange={e=>setSort(e.target.value)}><option value="popular">Popular</option><option value="recent">Recently Added</option><option value="title">Name A-Z</option></select></div></div><div className="catalog-meta"><span>{collection==='mine'?'个人收藏（当前为浏览器本地数据）':'全部游戏目录'} · {items.length} 款</span><span className="dot"/><span>非真实可玩列表，游戏资源与云主机尚未接入</span></div><div className="catalog-search-mobile"><input aria-label="在列表中搜索" placeholder="搜索游戏名称" value={query} onChange={e=>setQuery(e.target.value)}/></div>{items.length?<div className="game-grid">{items.map(game=><article className="game-card" key={game.id}><div className="cover"><Link href={`/games/${game.slug}`} aria-label={`查看 ${game.title} 详情`}><img src={game.coverUrl} alt={`${game.title} 游戏封面`} loading="lazy"/></Link><span className={`platform ${game.platform}`} title={game.platform.toUpperCase()}>{game.platform==='epic'?'E':game.platform==='steam'?'S':game.platform==='xbox'?'X':game.platform==='native'?'C':'R'}</span><div className="cover-hover"><Link href={`/games/${game.slug}`} className="btn primary small">查看详情</Link><button className="btn dark small" type="button" onClick={()=>toggleFavorite(game.id)}>{favorites.includes(game.id)?'取消收藏':'收藏'}</button></div></div><div className="under-cover"><Status game={game}/><div className="mobile-card-title">{game.title}</div></div></article>)}</div>:<div className="empty"><strong>没有找到符合条件的游戏</strong><p>可以清除筛选，或者切换到完整游戏库。</p><button className="btn secondary" onClick={all}>清除筛选</button>{collection==='mine'&&<Link href="/library" className="btn primary">浏览游戏库</Link>}</div>}</section>
+}

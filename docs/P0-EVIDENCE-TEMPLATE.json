@@ -1,0 +1,13 @@
+{
+  "game": "supertuxkart",
+  "observedAt": "",
+  "network": "local-machine",
+  "browser": "",
+  "resolution": "",
+  "videoObserved": false,
+  "audioObserved": false,
+  "keyboardOrControllerObserved": false,
+  "successfulExitObserved": false,
+  "screenshotPath": "",
+  "notes": "Please fill in only after performing tests on the actual Windows GPU host."
+}

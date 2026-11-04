@@ -1,0 +1,1 @@
+Build attempt UTC 2026-11-04. `npm install --no-audit --no-fund --fetch-retries=0 --fetch-timeout=5000` failed with EAI_AGAIN (registry.npmjs.org DNS resolution). node_modules is absent. Consequently `npm run build` was not executed; no production build claim can be made.

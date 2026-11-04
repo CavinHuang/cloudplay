@@ -1,0 +1,11 @@
+{
+  "schema": "cloudplay.third-party.v1",
+  "version": "0.11.0",
+  "policy": "Offline deployment artifacts embed compiled dependencies; source-only repository does not ship proprietary binaries or legally unreviewed installers.",
+  "components": [
+    {"id":"moonlight-web","repository":"https://github.com/MrCreativ3001/moonlight-web-stream","revision":"7b9821430e07087f459db3db9aac550e1e9c9bff","license":"GPL-3.0-or-later","requiredFor":"windows-p0,windows-full","artifact":"web-server.exe + static/ + patched complete corresponding source","bundledInSourceRepository":false},
+    {"id":"node","repository":"https://nodejs.org/","license":"Node.js license","requiredFor":"windows-p0,windows-full","artifact":"Windows node.exe and license","bundledInSourceRepository":false},
+    {"id":"sunshine","repository":"https://github.com/LizardByte/Sunshine","license":"consult upstream release and bundled dependencies","requiredFor":"Windows GPU host","artifact":"official installer, optionally attached after redistribution review","bundledInSourceRepository":false},
+    {"id":"supertuxkart","repository":"https://github.com/supertuxkart/stk-code","license":"GPL code; art and audio may have separate licenses","requiredFor":"licensed first-game verification","artifact":"official binary/data or locally installed game","bundledInSourceRepository":false}
+  ]
+}

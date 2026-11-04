@@ -1,0 +1,24 @@
+name: CloudPlay P0-P1 CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: cloudplay-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Unit tests
+        run: npm test
+      - name: Next.js build
+        run: npm run build

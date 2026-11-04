@@ -1,17 +1,22 @@
 node_modules/
 .next/
 .env
-.env.*
-!.env.example
+.env.local
 *.log
 .DS_Store
 coverage/
 .p0-lab-token
+.env.local
 .p0-evidence/
 .p0-lab-pids.json
+
+# P0 local session journal (may contain internal host and session identifiers)
 .p0-session-journal.json
 .p0-session-journal.json.*.tmp
+
+# Generated offline distributions and transient build/download payloads
 /dist/
+/web-DEPENDENCIES.txt
 /.release-cache/
 /.offline-build/
 /data/

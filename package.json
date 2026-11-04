@@ -1,0 +1,34 @@
+{
+  "name": "cloudplay-web",
+  "version": "0.12.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -H 127.0.0.1",
+    "build": "next build",
+    "start": "next start -H 127.0.0.1",
+    "test": "node --test tests/*.test.mjs",
+    "check": "npm run test && npm run build",
+    "p0:coordinator": "node lab/coordinator.mjs",
+    "p0:agent": "node lab/agent.mjs",
+    "p0:verify": "node scripts/p0/verify-evidence.mjs",
+    "p0:moonlight:patch": "node scripts/p0/integrate-moonlight-web.mjs",
+    "moonlight:toolchain": "node scripts/p0/check-moonlight-toolchain.mjs",
+    "check:source": "node scripts/check-source-syntax.mjs",
+    "test:webrtc-browser": "python tests/browser-real-webrtc-smoke.py",
+    "p0:verify-media": "node scripts/p0/verify-media-evidence.mjs",
+    "p0:moonlight:check-bundle": "node scripts/p0/check-moonlight-output.mjs",
+    "release:verify": "node scripts/release/verify-offline.mjs",
+    "release:pack": "node scripts/release/pack-offline.mjs",
+    "release:notices": "node scripts/release/generate-notices.mjs",
+    "release:readiness": "node scripts/release/check-readiness.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "next": "16.4.4",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  }
+}

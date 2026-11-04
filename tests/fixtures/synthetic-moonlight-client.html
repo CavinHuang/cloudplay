@@ -1,0 +1,13 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><style>
+body{margin:0;background:#080c16;color:#e4ecfa;font:16px/1.6 system-ui;display:grid;place-items:center;min-height:100vh;text-align:center}
+strong{font-size:26px;color:#f7cd87}.note{max-width:480px;margin:auto;color:#aebbd0}
+</style></head><body><div><strong>TEST FIXTURE — SYNTHETIC COUNTERS</strong><p class="note">No game, GPU, Sunshine stream or real WebRTC connection is running here. This page only exercises the diagnostics message bridge.</p></div><script type="module">
+import {attachMoonlightMediaBridge} from '/lab/moonlight-media-bridge.mjs';
+let frames=0;
+setInterval(()=>{frames+=8},400);
+const pc={connectionState:'connected',iceConnectionState:'connected',getStats:async()=>new Map([
+ ['video',{type:'inbound-rtp',kind:'video',framesDecoded:frames,bytesReceived:frames*2500,framesPerSecond:20}],
+ ['audio',{type:'inbound-rtp',kind:'audio',bytesReceived:frames*100}],
+])};
+attachMoonlightMediaBridge({getPeerConnection:()=>pc,expectedParentOrigin:'http://127.0.0.1:7789'});
+</script></body></html>

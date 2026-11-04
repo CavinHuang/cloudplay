@@ -1,0 +1,13 @@
+{
+  "webrtc": {
+    "port_range": {"min": 40000, "max": 40010},
+    "ice_servers": [
+      {"urls": ["stun:stun.l.google.com:19302"]},
+      {
+        "urls": ["turn:REPLACE_WITH_YOUR_TURN_HOST:3478?transport=udp", "turn:REPLACE_WITH_YOUR_TURN_HOST:3478?transport=tcp"],
+        "username": "REPLACE_WITH_EPHEMERAL_USERNAME",
+        "credential": "REPLACE_WITH_SHORT_LIVED_SECRET"
+      }
+    ]
+  }
+}

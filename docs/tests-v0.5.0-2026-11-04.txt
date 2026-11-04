@@ -1,0 +1,344 @@
+
+> cloudplay-web@0.5.0 test
+> node --test tests/*.test.mjs
+
+TAP version 13
+# Subtest: health reports catalog but no real GPU / auth
+ok 1 - health reports catalog but no real GPU / auth
+  ---
+  duration_ms: 185.674632
+  type: 'test'
+  ...
+# Subtest: hosts and sessions are empty until real provider
+ok 2 - hosts and sessions are empty until real provider
+  ---
+  duration_ms: 12.599793
+  type: 'test'
+  ...
+# Subtest: POST session cannot claim success without provider
+ok 3 - POST session cannot claim success without provider
+  ---
+  duration_ms: 18.700467
+  type: 'test'
+  ...
+# Subtest: reject malformed and non-json session requests
+ok 4 - reject malformed and non-json session requests
+  ---
+  duration_ms: 5.801051
+  type: 'test'
+  ...
+# Subtest: catalog returns free games with accurate metadata
+ok 5 - catalog returns free games with accurate metadata
+  ---
+  duration_ms: 2.028292
+  type: 'test'
+  ...
+# Subtest: only native candidates in candidate filter
+ok 6 - only native candidates in candidate filter
+  ---
+  duration_ms: 3.428026
+  type: 'test'
+  ...
+# Subtest: text filtering, genre and controller compose
+ok 7 - text filtering, genre and controller compose
+  ---
+  duration_ms: 0.591425
+  type: 'test'
+  ...
+# Subtest: no unknown title is auto available
+ok 8 - no unknown title is auto available
+  ---
+  duration_ms: 0.321894
+  type: 'test'
+  ...
+# Subtest: all cloud games are gated
+ok 9 - all cloud games are gated
+  ---
+  duration_ms: 0.581442
+  type: 'test'
+  ...
+# Subtest: coordinator requires a strong token
+ok 10 - coordinator requires a strong token
+  ---
+  duration_ms: 2.737656
+  type: 'test'
+  ...
+# Subtest: heartbeat validates types; cannot set streamVerified in payload
+ok 11 - heartbeat validates types; cannot set streamVerified in payload
+  ---
+  duration_ms: 1.66527
+  type: 'test'
+  ...
+# Subtest: coordinator denies anonymous or incorrect token
+ok 12 - coordinator denies anonymous or incorrect token
+  ---
+  duration_ms: 97.435154
+  type: 'test'
+  ...
+# Subtest: coordinator accepts real agent heartbeat but never marks stream verified
+ok 13 - coordinator accepts real agent heartbeat but never marks stream verified
+  ---
+  duration_ms: 26.802371
+  type: 'test'
+  ...
+# Subtest: stale heartbeats expire and no stale host is reported
+ok 14 - stale heartbeats expire and no stale host is reported
+  ---
+  duration_ms: 21.23034
+  type: 'test'
+  ...
+# Subtest: missing game, GPU or Sunshine yields incomplete infrastructure
+ok 15 - missing game, GPU or Sunshine yields incomplete infrastructure
+  ---
+  duration_ms: 36.457944
+  type: 'test'
+  ...
+# Subtest: Next status client strips host identifiers and model
+ok 16 - Next status client strips host identifiers and model
+  ---
+  duration_ms: 24.806974
+  type: 'test'
+  ...
+# Subtest: status client fails closed for missing coordinator
+ok 17 - status client fails closed for missing coordinator
+  ---
+  duration_ms: 0.55863
+  type: 'test'
+  ...
+# Subtest: host agent only accepts 127.0.0.1 lab coordinator
+ok 18 - host agent only accepts 127.0.0.1 lab coordinator
+  ---
+  duration_ms: 0.821359
+  type: 'test'
+  ...
+# Subtest: agent local diagnostic handles missing nvidia-smi without crashing
+ok 19 - agent local diagnostic handles missing nvidia-smi without crashing
+  ---
+  duration_ms: 0.97617
+  type: 'test'
+  ...
+# Subtest: malformed heartbeat fails with stable error
+ok 20 - malformed heartbeat fails with stable error
+  ---
+  duration_ms: 10.056353
+  type: 'test'
+  ...
+# Subtest: standalone P0 monitor is served but state remains authenticated
+ok 21 - standalone P0 monitor is served but state remains authenticated
+  ---
+  duration_ms: 34.877706
+  type: 'test'
+  ...
+# Subtest: real OS process: command → spawn allowlisted executable → status → stop and reclaim
+ok 22 - real OS process: command → spawn allowlisted executable → status → stop and reclaim
+  ---
+  duration_ms: 206.377362
+  type: 'test'
+  ...
+# Subtest: session launch is opt-in and restricted to one local game
+ok 23 - session launch is opt-in and restricted to one local game
+  ---
+  duration_ms: 117.117339
+  type: 'test'
+  ...
+# Subtest: authenticated command handoff starts process state but does NOT mark media verified
+ok 24 - authenticated command handoff starts process state but does NOT mark media verified
+  ---
+  duration_ms: 74.242078
+  type: 'test'
+  ...
+# Subtest: pending launch can be cancelled without ever reaching an agent
+ok 25 - pending launch can be cancelled without ever reaching an agent
+  ---
+  duration_ms: 23.434843
+  type: 'test'
+  ...
+# Subtest: stale heartbeat triggers reconnecting then bounded failure, never false streaming
+ok 26 - stale heartbeat triggers reconnecting then bounded failure, never false streaming
+  ---
+  duration_ms: 29.397611
+  type: 'test'
+  ...
+# Subtest: host heartbeat recovery restores connecting but never streaming
+ok 27 - host heartbeat recovery restores connecting but never streaming
+  ---
+  duration_ms: 40.78796
+  type: 'test'
+  ...
+# Subtest: command reports require authentication, correct ownership and allowed outcomes
+ok 28 - command reports require authentication, correct ownership and allowed outcomes
+  ---
+  duration_ms: 26.730063
+  type: 'test'
+  ...
+# Subtest: fake host with missing GPU or game cannot create session
+ok 29 - fake host with missing GPU or game cannot create session
+  ---
+  duration_ms: 28.363559
+  type: 'test'
+  ...
+# Subtest: game runner launches exact allowlisted path; idempotent; owns only its process
+ok 30 - game runner launches exact allowlisted path; idempotent; owns only its process
+  ---
+  duration_ms: 2.834735
+  type: 'test'
+  ...
+# Subtest: agent runner never executes missing paths or arbitrary shell expressions
+ok 31 - agent runner never executes missing paths or arbitrary shell expressions
+  ---
+  duration_ms: 0.884973
+  type: 'test'
+  ...
+# Subtest: agent restart without owned game fails the old connecting session
+ok 32 - agent restart without owned game fails the old connecting session
+  ---
+  duration_ms: 45.319403
+  type: 'test'
+  ...
+# Subtest: unreported launch retries same command rather than allocating second process
+ok 33 - unreported launch retries same command rather than allocating second process
+  ---
+  duration_ms: 22.354453
+  type: 'test'
+  ...
+# Subtest: failed session can recover by stopping a still-running owned game
+ok 34 - failed session can recover by stopping a still-running owned game
+  ---
+  duration_ms: 40.991674
+  type: 'test'
+  ...
+# Subtest: Windows runner refuses local executable that is not named SuperTuxKart
+ok 35 - Windows runner refuses local executable that is not named SuperTuxKart
+  ---
+  duration_ms: 0.274745
+  type: 'test'
+  ...
+# Subtest: P0 web player path is a safe canonical UUID with no token included
+ok 36 - P0 web player path is a safe canonical UUID with no token included
+  ---
+  duration_ms: 600.210588
+  type: 'test'
+  ...
+# Subtest: P0 handoff refuses missing session and missing credentials
+ok 37 - P0 handoff refuses missing session and missing credentials
+  ---
+  duration_ms: 139.797238
+  type: 'test'
+  ...
+# Subtest: P0 handoff only enabled after launch acknowledged, still unverified media
+ok 38 - P0 handoff only enabled after launch acknowledged, still unverified media
+  ---
+  duration_ms: 140.217023
+  type: 'test'
+  ...
+# Subtest: P0 handoff fails closed after host heartbeat expires
+ok 39 - P0 handoff fails closed after host heartbeat expires
+  ---
+  duration_ms: 47.667019
+  type: 'test'
+  ...
+# Subtest: P0 stream endpoint must be a safe local absolute URL, never arbitrary URL
+ok 40 - P0 stream endpoint must be a safe local absolute URL, never arbitrary URL
+  ---
+  duration_ms: 1.180374
+  type: 'test'
+  ...
+# Subtest: P1 P0 session endpoint rejects malformed ids without contacting coordinator
+ok 41 - P1 P0 session endpoint rejects malformed ids without contacting coordinator
+  ---
+  duration_ms: 3.523056
+  type: 'test'
+  ...
+# Subtest: P1 status UI references a defined sessions array
+ok 42 - P1 status UI references a defined sessions array
+  ---
+  duration_ms: 0.487079
+  type: 'test'
+  ...
+# Subtest: P0 localhost service rejects alternate Host and cross-origin browser mutations
+ok 43 - P0 localhost service rejects alternate Host and cross-origin browser mutations
+  ---
+  duration_ms: 48.740022
+  type: 'test'
+  ...
+# Subtest: P0 UI is opt-in and never enabled in production
+ok 44 - P0 UI is opt-in and never enabled in production
+  ---
+  duration_ms: 1.08118
+  type: 'test'
+  ...
+# Subtest: P1 endpoints hide all session details when lab is not explicitly enabled
+ok 45 - P1 endpoints hide all session details when lab is not explicitly enabled
+  ---
+  duration_ms: 7.651834
+  type: 'test'
+  ...
+# Subtest: P1 handoff redirects only after active authorized local session
+ok 46 - P1 handoff redirects only after active authorized local session
+  ---
+  duration_ms: 107.465724
+  type: 'test'
+  ...
+# Subtest: P1 rejects malicious coordinator URLs and mismatched session IDs
+ok 47 - P1 rejects malicious coordinator URLs and mismatched session IDs
+  ---
+  duration_ms: 0.665353
+  type: 'test'
+  ...
+# Subtest: Windows game runner requests graceful close without /F before stopping
+ok 48 - Windows game runner requests graceful close without /F before stopping
+  ---
+  duration_ms: 2.69619
+  type: 'test'
+  ...
+# Subtest: Windows game runner force fallback runs only after bounded grace period
+ok 49 - Windows game runner force fallback runs only after bounded grace period
+  ---
+  duration_ms: 11.271875
+  type: 'test'
+  ...
+# Subtest: preflight fails closed when host and streaming provider missing
+ok 50 - preflight fails closed when host and streaming provider missing
+  ---
+  duration_ms: 5.63523
+  type: 'test'
+  ...
+# Subtest: cannot bypass rights and installation by supplying healthy host
+ok 51 - cannot bypass rights and installation by supplying healthy host
+  ---
+  duration_ms: 19.238018
+  type: 'test'
+  ...
+# Subtest: unknown game rejected
+ok 52 - unknown game rejected
+  ---
+  duration_ms: 0.747762
+  type: 'test'
+  ...
+# Subtest: state machine supports a complete lifecycle
+ok 53 - state machine supports a complete lifecycle
+  ---
+  duration_ms: 6.209456
+  type: 'test'
+  ...
+# Subtest: cannot jump directly into streaming or restart a finished session
+ok 54 - cannot jump directly into streaming or restart a finished session
+  ---
+  duration_ms: 0.618103
+  type: 'test'
+  ...
+# Subtest: reconnection path returns to streaming
+ok 55 - reconnection path returns to streaming
+  ---
+  duration_ms: 0.23372
+  type: 'test'
+  ...
+1..55
+# tests 55
+# suites 0
+# pass 55
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2409.67437

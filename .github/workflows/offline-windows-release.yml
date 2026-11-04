@@ -1,0 +1,93 @@
+name: Build complete Windows offline deployment bundle (manual)
+# The build runner is online. The published artifact runs offline on the GPU host.
+# This is a BUILD WORKFLOW, not a Windows GPU media acceptance test.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-offline-bundle:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout CloudPlay
+        uses: actions/checkout@v4
+        with:
+          path: cloudplay
+          persist-credentials: false
+      - name: Checkout audited Moonlight source (no floating branch)
+        uses: actions/checkout@v4
+        with:
+          repository: MrCreativ3001/moonlight-web-stream
+          ref: 7b9821430e07087f459db3db9aac550e1e9c9bff
+          path: moonlight-web
+          persist-credentials: false
+      - name: Setup Node 24 for CloudPlay
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Save CloudPlay Node directory for bundling
+        id: cloud-node
+        shell: pwsh
+        run: |
+          $home=Split-Path (Get-Command node).Source -Parent
+          "home=$home" >> $env:GITHUB_OUTPUT
+      - name: Build and test CloudPlay website
+        shell: pwsh
+        working-directory: cloudplay
+        run: |
+          npm install --no-audit --no-fund
+          npm test
+          npm run build
+          node scripts/release/generate-notices.mjs | Out-File -FilePath web-DEPENDENCIES.txt -Encoding utf8
+      - name: Setup Node 26 for Moonlight upstream
+        uses: actions/setup-node@v4
+        with:
+          node-version: '26.4.0'
+      - name: Use compatible npm 11.17
+        shell: pwsh
+        run: npm install --global npm@11.17.0 --no-audit --no-fund
+      - name: Prepare Windows GNU toolchain for native Moonlight build
+        shell: pwsh
+        run: |
+          rustup target add x86_64-pc-windows-gnu
+          if (!(Get-Command gcc -ErrorAction SilentlyContinue)) {
+            choco install mingw --no-progress -y
+          }
+          if (!(Get-Command wasm-bindgen -ErrorAction SilentlyContinue)) {
+            cargo install wasm-bindgen-cli --locked
+          }
+      - name: Compile patched Moonlight Web Stream
+        shell: pwsh
+        working-directory: cloudplay
+        run: |
+          .\scripts\p0\build-moonlight-web.ps1 -MoonlightPath ..\moonlight-web -Build
+      - name: Restore CloudPlay Node 24 and assemble self-contained bundle
+        shell: pwsh
+        working-directory: cloudplay
+        env:
+          CLOUD_NODE_HOME: ${{ steps.cloud-node.outputs.home }}
+        run: |
+          $env:PATH=$env:CLOUD_NODE_HOME+';'+$env:PATH
+          $node=Join-Path $env:CLOUD_NODE_HOME 'node.exe'
+          $license=Join-Path $env:CLOUD_NODE_HOME 'LICENSE'
+          if (!(Test-Path $license)) { throw 'Node distribution license not present; cannot ship a compliant offline bundle' }
+          & $node scripts/release/pack-offline.mjs `
+            --mode windows-full --out ..\dist\CloudPlay-Windows-Offline `
+            --node $node --node-license $license `
+            --next-standalone .next\standalone --next-static .next\static `
+            --public public --web-notices web-DEPENDENCIES.txt `
+            --moonlight-server ..\moonlight-web\target\x86_64-pc-windows-gnu\release\web-server.exe `
+            --moonlight-static ..\moonlight-web\static `
+            --moonlight-source ..\moonlight-web
+          if($LASTEXITCODE -ne 0){throw 'Offline package creation failed'}
+          & $node scripts/release/verify-offline.mjs ..\dist\CloudPlay-Windows-Offline
+          if($LASTEXITCODE -ne 0){throw 'Offline package integrity validation failed'}
+      - name: Publish offline deployment artifact (no runtime downloads required)
+        uses: actions/upload-artifact@v4
+        with:
+          name: CloudPlay-Windows-Offline-v0.12.0
+          path: dist/CloudPlay-Windows-Offline/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,44 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtempSync,writeFileSync,chmodSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {createCoordinator} from '../lib/lab/coordinator.mjs';
+import {createGameRunner} from '../lib/lab/game-runner.mjs';
+const TOKEN='safe-private-local-coordinator-token-abcdefgh';
+const hostId='integration-test-node';
+const heart=(game=null)=>({hostId,gpu:{detected:true,model:'INTEGRATION SIMULATED GPU'},sunshinePortOpen:true,webStreamPortOpen:true,gameFilePresent:true,activeGame:game});
+
+test('real OS process: command → spawn allowlisted executable → status → stop and reclaim', {skip:process.platform==='win32'},async t=>{
+ const dir=mkdtempSync(join(tmpdir(),'cloudplay-e2e-'));
+ const script=join(dir,'fake-test-game.sh');
+ writeFileSync(script,'#!/bin/sh\nexec sleep 30\n');chmodSync(script,0o700);
+ const runner=createGameRunner({gamePath:script});
+ const c=createCoordinator({token:TOKEN,launchEnabled:true});
+ await new Promise(r=>c.server.listen(0,'127.0.0.1',r));
+ t.after(async()=>{const p=runner.snapshot();if(p?.state==='running')try{await runner.stop(p.sessionId)}catch{};await new Promise(r=>c.server.close(r));rmSync(dir,{recursive:true,force:true})});
+ const base=`http://127.0.0.1:${c.server.address().port}`;
+ async function call(path,method='GET',body){const resp=await fetch(base+path,{method,headers:{Authorization:`Bearer ${TOKEN}`,...(body!==undefined?{'content-type':'application/json'}:{})},body:body===undefined?undefined:JSON.stringify(body)});return {status:resp.status,data:await resp.json()};}
+ await call('/internal/heartbeat','POST',heart());
+ const launch=await call('/internal/lab/sessions','POST',{hostId,gameId:'supertuxkart'});
+ assert.equal(launch.status,202);
+ const command=(await call('/internal/commands?hostId='+hostId)).data.commands[0];
+ const launched=await runner.launch(command.sessionId,command.gameId);
+ assert.equal(launched.state,'running');assert.ok(launched.pid>0);
+ const report=await call('/internal/command-results','POST',{...command,hostId,outcome:'launched'});
+ assert.equal(report.data.session.state,'connecting');
+ await call('/internal/heartbeat','POST',heart(runner.snapshot()));
+ const status=(await call('/internal/status')).data;
+ assert.equal(status.sessions[0].state,'connecting');assert.equal(status.streamVerified,false);
+ const handoff=await call(`/internal/lab/sessions/${launch.data.session.id}/stream-handoff`);
+ assert.equal(handoff.status,200);assert.equal(handoff.data.mode,'external-moonlight-web');assert.equal(handoff.data.streamVerified,false);
+ const stop=await call(`/internal/lab/sessions/${launch.data.session.id}`,'DELETE');
+ assert.equal(stop.data.session.state,'stopping');
+ const stopCommand=(await call('/internal/commands?hostId='+hostId)).data.commands[0];
+ assert.equal(stopCommand.kind,'stop');
+ await runner.stop(stopCommand.sessionId);
+ await call('/internal/command-results','POST',{...stopCommand,hostId,outcome:'stopped'});
+ assert.equal((await call('/internal/lab/sessions')).data.sessions[0].state,'finished');
+ assert.equal(runner.snapshot().state,'exited');
+ assert.equal((await call(`/internal/lab/sessions/${launch.data.session.id}/stream-handoff`)).status,409);
+});

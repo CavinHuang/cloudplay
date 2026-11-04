@@ -1,0 +1,628 @@
+TAP version 13
+# Subtest: health reports catalog but no real GPU / auth
+ok 1 - health reports catalog but no real GPU / auth
+  ---
+  duration_ms: 30.112234
+  type: 'test'
+  ...
+# Subtest: hosts and sessions are empty until real provider
+ok 2 - hosts and sessions are empty until real provider
+  ---
+  duration_ms: 0.88813
+  type: 'test'
+  ...
+# Subtest: POST session cannot claim success without provider
+ok 3 - POST session cannot claim success without provider
+  ---
+  duration_ms: 2.033189
+  type: 'test'
+  ...
+# Subtest: reject malformed and non-json session requests
+ok 4 - reject malformed and non-json session requests
+  ---
+  duration_ms: 1.30221
+  type: 'test'
+  ...
+# Subtest: browser capability collection handles unavailable APIs, no synthetic media proof
+ok 5 - browser capability collection handles unavailable APIs, no synthetic media proof
+  ---
+  duration_ms: 1.547211
+  type: 'test'
+  ...
+# Subtest: browser detects supported codecs and physical gamepad activity without exporting identifiers
+ok 6 - browser detects supported codecs and physical gamepad activity without exporting identifiers
+  ---
+  duration_ms: 0.533597
+  type: 'test'
+  ...
+# Subtest: unsupported or buggy browser getCapabilities / Gamepad API fails safe
+ok 7 - unsupported or buggy browser getCapabilities / Gamepad API fails safe
+  ---
+  duration_ms: 0.28504
+  type: 'test'
+  ...
+# Subtest: catalog returns free games with accurate metadata
+ok 8 - catalog returns free games with accurate metadata
+  ---
+  duration_ms: 1.135365
+  type: 'test'
+  ...
+# Subtest: only native candidates in candidate filter
+ok 9 - only native candidates in candidate filter
+  ---
+  duration_ms: 1.719135
+  type: 'test'
+  ...
+# Subtest: text filtering, genre and controller compose
+ok 10 - text filtering, genre and controller compose
+  ---
+  duration_ms: 0.284129
+  type: 'test'
+  ...
+# Subtest: no unknown title is auto available
+ok 11 - no unknown title is auto available
+  ---
+  duration_ms: 0.192113
+  type: 'test'
+  ...
+# Subtest: all cloud games are gated
+ok 12 - all cloud games are gated
+  ---
+  duration_ms: 0.20998
+  type: 'test'
+  ...
+# Subtest: compiled Moonlight frontend must include telemetry bridge, not just patched source
+ok 13 - compiled Moonlight frontend must include telemetry bridge, not just patched source
+  ---
+  duration_ms: 48.135646
+  type: 'test'
+  ...
+# Subtest: Windows runner supports separate frontend-only build and checks compiled output
+ok 14 - Windows runner supports separate frontend-only build and checks compiled output
+  ---
+  duration_ms: 0.414641
+  type: 'test'
+  ...
+# Subtest: Moonlight pinned source has a separate >=26.4 Node and npm >=11.17 build gate
+ok 15 - Moonlight pinned source has a separate >=26.4 Node and npm >=11.17 build gate
+  ---
+  duration_ms: 1.824561
+  type: 'test'
+  ...
+# Subtest: PowerShell upstream runner is pinned, dry-runs before modification and gates build
+ok 16 - PowerShell upstream runner is pinned, dry-runs before modification and gates build
+  ---
+  duration_ms: 1.751814
+  type: 'test'
+  ...
+# Subtest: rejects incomplete offline release instead of fetching at deploy time
+ok 17 - rejects incomplete offline release instead of fetching at deploy time
+  ---
+  duration_ms: 1.546862
+  type: 'test'
+  ...
+# Subtest: packages offline Windows P0 including license + corresponding patched source
+ok 18 - packages offline Windows P0 including license + corresponding patched source
+  ---
+  duration_ms: 51.649442
+  type: 'test'
+  ...
+# Subtest: detects any modified file in an offline Windows package
+ok 19 - detects any modified file in an offline Windows package
+  ---
+  duration_ms: 41.40125
+  type: 'test'
+  ...
+# Subtest: rejects missing or wrong Moonlight compiled media bridge
+ok 20 - rejects missing or wrong Moonlight compiled media bridge
+  ---
+  duration_ms: 13.654577
+  type: 'test'
+  ...
+# Subtest: rejects unpatched Moonlight corresponding source
+ok 21 - rejects unpatched Moonlight corresponding source
+  ---
+  duration_ms: 15.327805
+  type: 'test'
+  ...
+# Subtest: web full bundle requires standalone server and retains its runtime node_modules
+ok 22 - web full bundle requires standalone server and retains its runtime node_modules
+  ---
+  duration_ms: 21.333443
+  type: 'test'
+  ...
+# Subtest: docker image packaging supports offline `docker load` deployment and integrity checking
+ok 23 - docker image packaging supports offline `docker load` deployment and integrity checking
+  ---
+  duration_ms: 3.845396
+  type: 'test'
+  ...
+# Subtest: detects unexpected added binary in offline bundle
+ok 24 - detects unexpected added binary in offline bundle
+  ---
+  duration_ms: 24.778229
+  type: 'test'
+  ...
+# Subtest: refuses non-empty release directory to prevent partially overwritten deployments
+ok 25 - refuses non-empty release directory to prevent partially overwritten deployments
+  ---
+  duration_ms: 3.473227
+  type: 'test'
+  ...
+# Subtest: failed packaging does not leave a partial release tree
+ok 26 - failed packaging does not leave a partial release tree
+  ---
+  duration_ms: 12.55037
+  type: 'test'
+  ...
+# Subtest: P0 diagnostics is a standalone local page with strict CSP, no fake real-media metrics
+ok 27 - P0 diagnostics is a standalone local page with strict CSP, no fake real-media metrics
+  ---
+  duration_ms: 37.447487
+  type: 'test'
+  ...
+# Subtest: standard mapping labels A/RT and applies stick deadzone without identifying hardware
+ok 28 - standard mapping labels A/RT and applies stick deadzone without identifying hardware
+  ---
+  duration_ms: 1.899522
+  type: 'test'
+  ...
+# Subtest: unknown gamepad layout never assumes Xbox face-button layout
+ok 29 - unknown gamepad layout never assumes Xbox face-button layout
+  ---
+  duration_ms: 0.242939
+  type: 'test'
+  ...
+# Subtest: gamepad list is bounded and safely handles browsers without API
+ok 30 - gamepad list is bounded and safely handles browsers without API
+  ---
+  duration_ms: 0.515781
+  type: 'test'
+  ...
+# Subtest: coordinator requires a strong token
+ok 31 - coordinator requires a strong token
+  ---
+  duration_ms: 2.411236
+  type: 'test'
+  ...
+# Subtest: heartbeat validates types; cannot set streamVerified in payload
+ok 32 - heartbeat validates types; cannot set streamVerified in payload
+  ---
+  duration_ms: 1.71541
+  type: 'test'
+  ...
+# Subtest: coordinator denies anonymous or incorrect token
+ok 33 - coordinator denies anonymous or incorrect token
+  ---
+  duration_ms: 54.359705
+  type: 'test'
+  ...
+# Subtest: coordinator accepts real agent heartbeat but never marks stream verified
+ok 34 - coordinator accepts real agent heartbeat but never marks stream verified
+  ---
+  duration_ms: 19.762477
+  type: 'test'
+  ...
+# Subtest: stale heartbeats expire and no stale host is reported
+ok 35 - stale heartbeats expire and no stale host is reported
+  ---
+  duration_ms: 9.661449
+  type: 'test'
+  ...
+# Subtest: missing game, GPU or Sunshine yields incomplete infrastructure
+ok 36 - missing game, GPU or Sunshine yields incomplete infrastructure
+  ---
+  duration_ms: 8.668635
+  type: 'test'
+  ...
+# Subtest: Next status client strips host identifiers and model
+ok 37 - Next status client strips host identifiers and model
+  ---
+  duration_ms: 11.264513
+  type: 'test'
+  ...
+# Subtest: status client fails closed for missing coordinator
+ok 38 - status client fails closed for missing coordinator
+  ---
+  duration_ms: 0.416915
+  type: 'test'
+  ...
+# Subtest: host agent only accepts 127.0.0.1 lab coordinator
+ok 39 - host agent only accepts 127.0.0.1 lab coordinator
+  ---
+  duration_ms: 0.374822
+  type: 'test'
+  ...
+# Subtest: agent local diagnostic handles missing nvidia-smi without crashing
+ok 40 - agent local diagnostic handles missing nvidia-smi without crashing
+  ---
+  duration_ms: 1.035427
+  type: 'test'
+  ...
+# Subtest: malformed heartbeat fails with stable error
+ok 41 - malformed heartbeat fails with stable error
+  ---
+  duration_ms: 8.420969
+  type: 'test'
+  ...
+# Subtest: standalone P0 monitor is served but state remains authenticated
+ok 42 - standalone P0 monitor is served but state remains authenticated
+  ---
+  duration_ms: 10.038885
+  type: 'test'
+  ...
+# Subtest: collects only local whitelisted counters and identifies real decoded-frame deltas
+ok 43 - collects only local whitelisted counters and identifies real decoded-frame deltas
+  ---
+  duration_ms: 2.890423
+  type: 'test'
+  ...
+# Subtest: does not treat unchanged counters, ICE failures or a forged summary as proof
+ok 44 - does not treat unchanged counters, ICE failures or a forged summary as proof
+  ---
+  duration_ms: 1.438402
+  type: 'test'
+  ...
+# Subtest: rejects invalid order, excess samples, malformed UUID and duplicate clock ticks
+ok 45 - rejects invalid order, excess samples, malformed UUID and duplicate clock ticks
+  ---
+  duration_ms: 0.331459
+  type: 'test'
+  ...
+# Subtest: CLI independently verifies the trace and rejects insufficient and sensitive reports
+ok 46 - CLI independently verifies the trace and rejects insufficient and sensitive reports
+  ---
+  duration_ms: 261.132209
+  type: 'test'
+  ...
+# Subtest: standalone P0 player serves media evidence collector from local loopback origin
+ok 47 - standalone P0 player serves media evidence collector from local loopback origin
+  ---
+  duration_ms: 48.079178
+  type: 'test'
+  ...
+# Subtest: real P0 embedded player module parses with Node, including media export handler
+ok 48 - real P0 embedded player module parses with Node, including media export handler
+  ---
+  duration_ms: 29.887117
+  type: 'test'
+  ...
+# Subtest: media observer requires correct iframe source, URL origin, nonce, session ID and explicit hello
+ok 49 - media observer requires correct iframe source, URL origin, nonce, session ID and explicit hello
+  ---
+  duration_ms: 2.117963
+  type: 'test'
+  ...
+# Subtest: continuous zero-frame samples diagnose no video, even when telemetry keeps arriving
+ok 50 - continuous zero-frame samples diagnose no video, even when telemetry keeps arriving
+  ---
+  duration_ms: 0.53552
+  type: 'test'
+  ...
+# Subtest: renegotiation resets video generation; source disconnect and stale do not mean resumed gameplay
+ok 51 - renegotiation resets video generation; source disconnect and stale do not mean resumed gameplay
+  ---
+  duration_ms: 0.593175
+  type: 'test'
+  ...
+# Subtest: sanitize drops malformed samples and never returns candidate IP, raw browser details or credentials
+ok 52 - sanitize drops malformed samples and never returns candidate IP, raw browser details or credentials
+  ---
+  duration_ms: 0.452618
+  type: 'test'
+  ...
+# Subtest: getStats summary uses actual inbound RTP and selected candidate pair, does not expose ICE addresses
+ok 53 - getStats summary uses actual inbound RTP and selected candidate pair, does not expose ICE addresses
+  ---
+  duration_ms: 0.441001
+  type: 'test'
+  ...
+# Subtest: optional client bridge only accepts trusted iframe parent and sends real collected stats
+ok 54 - optional client bridge only accepts trusted iframe parent and sends real collected stats
+  ---
+  duration_ms: 6.399207
+  type: 'test'
+  ...
+# Subtest: local playback serves media observation module with safe CSP and no secret inclusion
+ok 55 - local playback serves media observation module with safe CSP and no secret inclusion
+  ---
+  duration_ms: 43.612805
+  type: 'test'
+  ...
+# Subtest: real OS process: command → spawn allowlisted executable → status → stop and reclaim
+ok 56 - real OS process: command → spawn allowlisted executable → status → stop and reclaim
+  ---
+  duration_ms: 70.210847
+  type: 'test'
+  ...
+# Subtest: coordinator restart preserves session identity and verifies host ownership before reconnect
+ok 57 - coordinator restart preserves session identity and verifies host ownership before reconnect
+  ---
+  duration_ms: 83.399598
+  type: 'test'
+  ...
+# Subtest: delivered launch report lost across restart is recovered from Agent heartbeat without duplicate launch
+ok 58 - delivered launch report lost across restart is recovered from Agent heartbeat without duplicate launch
+  ---
+  duration_ms: 15.52133
+  type: 'test'
+  ...
+# Subtest: restored reconnect state expires when no host heartbeat is received
+ok 59 - restored reconnect state expires when no host heartbeat is received
+  ---
+  duration_ms: 15.148001
+  type: 'test'
+  ...
+# Subtest: journal file is strict JSON, atomically saved and excludes tokens
+ok 60 - journal file is strict JSON, atomically saved and excludes tokens
+  ---
+  duration_ms: 3.452362
+  type: 'test'
+  ...
+# Subtest: corrupt or forged restart journal refuses coordinator startup
+ok 61 - corrupt or forged restart journal refuses coordinator startup
+  ---
+  duration_ms: 1.158879
+  type: 'test'
+  ...
+# Subtest: lost stop acknowledgement after restart reconciles from owned exited process
+ok 62 - lost stop acknowledgement after restart reconciles from owned exited process
+  ---
+  duration_ms: 21.461432
+  type: 'test'
+  ...
+# Subtest: real local OS process survives coordinator restart and is stopped under same recovered session
+ok 63 - real local OS process survives coordinator restart and is stopped under same recovered session
+  ---
+  duration_ms: 21.933458
+  type: 'test'
+  ...
+# Subtest: session launch is opt-in and restricted to one local game
+ok 64 - session launch is opt-in and restricted to one local game
+  ---
+  duration_ms: 58.381577
+  type: 'test'
+  ...
+# Subtest: authenticated command handoff starts process state but does NOT mark media verified
+ok 65 - authenticated command handoff starts process state but does NOT mark media verified
+  ---
+  duration_ms: 43.358595
+  type: 'test'
+  ...
+# Subtest: pending launch can be cancelled without ever reaching an agent
+ok 66 - pending launch can be cancelled without ever reaching an agent
+  ---
+  duration_ms: 7.812362
+  type: 'test'
+  ...
+# Subtest: stale heartbeat triggers reconnecting then bounded failure, never false streaming
+ok 67 - stale heartbeat triggers reconnecting then bounded failure, never false streaming
+  ---
+  duration_ms: 11.58816
+  type: 'test'
+  ...
+# Subtest: host heartbeat recovery restores connecting but never streaming
+ok 68 - host heartbeat recovery restores connecting but never streaming
+  ---
+  duration_ms: 16.539122
+  type: 'test'
+  ...
+# Subtest: command reports require authentication, correct ownership and allowed outcomes
+ok 69 - command reports require authentication, correct ownership and allowed outcomes
+  ---
+  duration_ms: 8.398626
+  type: 'test'
+  ...
+# Subtest: fake host with missing GPU or game cannot create session
+ok 70 - fake host with missing GPU or game cannot create session
+  ---
+  duration_ms: 5.750981
+  type: 'test'
+  ...
+# Subtest: game runner launches exact allowlisted path; idempotent; owns only its process
+ok 71 - game runner launches exact allowlisted path; idempotent; owns only its process
+  ---
+  duration_ms: 1.102385
+  type: 'test'
+  ...
+# Subtest: agent runner never executes missing paths or arbitrary shell expressions
+ok 72 - agent runner never executes missing paths or arbitrary shell expressions
+  ---
+  duration_ms: 0.219204
+  type: 'test'
+  ...
+# Subtest: agent restart without owned game fails the old connecting session
+ok 73 - agent restart without owned game fails the old connecting session
+  ---
+  duration_ms: 14.188235
+  type: 'test'
+  ...
+# Subtest: unreported launch retries same command rather than allocating second process
+ok 74 - unreported launch retries same command rather than allocating second process
+  ---
+  duration_ms: 6.952474
+  type: 'test'
+  ...
+# Subtest: failed session can recover by stopping a still-running owned game
+ok 75 - failed session can recover by stopping a still-running owned game
+  ---
+  duration_ms: 13.015225
+  type: 'test'
+  ...
+# Subtest: Windows runner refuses local executable that is not named SuperTuxKart
+ok 76 - Windows runner refuses local executable that is not named SuperTuxKart
+  ---
+  duration_ms: 0.25126
+  type: 'test'
+  ...
+# Subtest: P0 web player path is a safe canonical UUID with no token included
+ok 77 - P0 web player path is a safe canonical UUID with no token included
+  ---
+  duration_ms: 37.290997
+  type: 'test'
+  ...
+# Subtest: P0 handoff refuses missing session and missing credentials
+ok 78 - P0 handoff refuses missing session and missing credentials
+  ---
+  duration_ms: 12.201866
+  type: 'test'
+  ...
+# Subtest: P0 handoff only enabled after launch acknowledged, still unverified media
+ok 79 - P0 handoff only enabled after launch acknowledged, still unverified media
+  ---
+  duration_ms: 24.676272
+  type: 'test'
+  ...
+# Subtest: P0 handoff fails closed after host heartbeat expires
+ok 80 - P0 handoff fails closed after host heartbeat expires
+  ---
+  duration_ms: 16.778194
+  type: 'test'
+  ...
+# Subtest: P0 stream endpoint must be a safe local absolute URL, never arbitrary URL
+ok 81 - P0 stream endpoint must be a safe local absolute URL, never arbitrary URL
+  ---
+  duration_ms: 0.717378
+  type: 'test'
+  ...
+# Subtest: P1 P0 session endpoint rejects malformed ids without contacting coordinator
+ok 82 - P1 P0 session endpoint rejects malformed ids without contacting coordinator
+  ---
+  duration_ms: 5.632157
+  type: 'test'
+  ...
+# Subtest: P1 status UI references a defined sessions array
+ok 83 - P1 status UI references a defined sessions array
+  ---
+  duration_ms: 0.458096
+  type: 'test'
+  ...
+# Subtest: P0 localhost service rejects alternate Host and cross-origin browser mutations
+ok 84 - P0 localhost service rejects alternate Host and cross-origin browser mutations
+  ---
+  duration_ms: 24.148504
+  type: 'test'
+  ...
+# Subtest: pinned upstream WebRTCTransport patch installs at real peer constructor and close lifecycle
+ok 85 - pinned upstream WebRTCTransport patch installs at real peer constructor and close lifecycle
+  ---
+  duration_ms: 1.072682
+  type: 'test'
+  ...
+# Subtest: refuses unreviewed upstream revision and never changes source
+ok 86 - refuses unreviewed upstream revision and never changes source
+  ---
+  duration_ms: 32.644184
+  type: 'test'
+  ...
+# Subtest: actual upstream addon passes TypeScript 5.x compile and strict local postMessage handshake
+ok 87 - actual upstream addon passes TypeScript 5.x compile and strict local postMessage handshake
+  ---
+  duration_ms: 612.889614
+  type: 'test'
+  ...
+# Subtest: upstream snapshot used for integration is immutable and explicitly known
+ok 88 - upstream snapshot used for integration is immutable and explicitly known
+  ---
+  duration_ms: 0.143862
+  type: 'test'
+  ...
+# Subtest: P0 UI is opt-in and never enabled in production
+ok 89 - P0 UI is opt-in and never enabled in production
+  ---
+  duration_ms: 0.982499
+  type: 'test'
+  ...
+# Subtest: P1 endpoints hide all session details when lab is not explicitly enabled
+ok 90 - P1 endpoints hide all session details when lab is not explicitly enabled
+  ---
+  duration_ms: 5.18017
+  type: 'test'
+  ...
+# Subtest: P1 handoff redirects only after active authorized local session
+ok 91 - P1 handoff redirects only after active authorized local session
+  ---
+  duration_ms: 48.375145
+  type: 'test'
+  ...
+# Subtest: P1 rejects malicious coordinator URLs and mismatched session IDs
+ok 92 - P1 rejects malicious coordinator URLs and mismatched session IDs
+  ---
+  duration_ms: 0.590651
+  type: 'test'
+  ...
+# Subtest: Windows game runner requests graceful close without /F before stopping
+ok 93 - Windows game runner requests graceful close without /F before stopping
+  ---
+  duration_ms: 1.121774
+  type: 'test'
+  ...
+# Subtest: Windows game runner force fallback runs only after bounded grace period
+ok 94 - Windows game runner force fallback runs only after bounded grace period
+  ---
+  duration_ms: 10.683321
+  type: 'test'
+  ...
+# Subtest: preflight fails closed when host and streaming provider missing
+ok 95 - preflight fails closed when host and streaming provider missing
+  ---
+  duration_ms: 0.733692
+  type: 'test'
+  ...
+# Subtest: cannot bypass rights and installation by supplying healthy host
+ok 96 - cannot bypass rights and installation by supplying healthy host
+  ---
+  duration_ms: 0.945795
+  type: 'test'
+  ...
+# Subtest: unknown game rejected
+ok 97 - unknown game rejected
+  ---
+  duration_ms: 0.147727
+  type: 'test'
+  ...
+# Subtest: source-only build clearly identifies missing standalone web output
+ok 98 - source-only build clearly identifies missing standalone web output
+  ---
+  duration_ms: 43.982586
+  type: 'test'
+  ...
+# Subtest: production deployment is configured not to pull images or expose P0
+ok 99 - production deployment is configured not to pull images or expose P0
+  ---
+  duration_ms: 0.503162
+  type: 'test'
+  ...
+# Subtest: one-project Windows start/stop scripts and build instructions remain bundled
+ok 100 - one-project Windows start/stop scripts and build instructions remain bundled
+  ---
+  duration_ms: 0.575989
+  type: 'test'
+  ...
+# Subtest: state machine supports a complete lifecycle
+ok 101 - state machine supports a complete lifecycle
+  ---
+  duration_ms: 3.23491
+  type: 'test'
+  ...
+# Subtest: cannot jump directly into streaming or restart a finished session
+ok 102 - cannot jump directly into streaming or restart a finished session
+  ---
+  duration_ms: 0.377387
+  type: 'test'
+  ...
+# Subtest: reconnection path returns to streaming
+ok 103 - reconnection path returns to streaming
+  ---
+  duration_ms: 0.20302
+  type: 'test'
+  ...
+1..103
+# tests 103
+# suites 0
+# pass 103
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1584.166334

@@ -1,0 +1,7 @@
+# Online BUILD MACHINE only. At deploy time use docker-compose.yaml (image-only).
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cloudplay-web:0.11.0
