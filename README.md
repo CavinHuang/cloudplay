@@ -1,5 +1,7 @@
 # CloudPlay v0.12.0 — 离线一体化安装、升级与回滚
 
+> **GitHub CI 验证（2026-11-04）：** [首次真实构建](https://github.com/CavinHuang/cloudplay/actions/runs/41806874819) 已成功：依赖安装、112 项 Node 测试和 Next.js 生产构建全部通过。此结果不等于 Moonlight Web 原生构建、离线 Windows 安装包或 GPU 游戏串流已通过。
+
 本仓库已将 **Next.js 游戏库、P0 Coordinator/Host Agent、Moonlight Web 真实上游补丁、编译工具链检查、离线打包器、Windows 一键启动脚本、Docker 镜像离线导入**统一管理。
 
 **关键交付原则：构建期一次准备，部署期零 Git/npm/cargo 下载。** 在可联网的构建机上生成 `windows-full` 完整发行目录或 `docker-web` 镜像包，迁移到目标服务器后直接校验并启动。打包工具对缺失的 Moonlight 已编译组件、对应修改源码、Node 运行时、Next.js standalone 和许可证会报错，不交付假离线包。
