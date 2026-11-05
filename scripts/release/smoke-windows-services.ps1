@@ -28,7 +28,9 @@ $passed=$false
 function Start-Owned([string]$Exe,[string[]]$Args,[string]$Cwd,[string]$Name){
   $out=Join-Path $work ($Name+'.out.log')
   $err=Join-Path $work ($Name+'.err.log')
-  $proc=Start-Process -FilePath $Exe -ArgumentList $Args -WorkingDirectory $Cwd -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+  $start=@{FilePath=$Exe;WorkingDirectory=$Cwd;PassThru=$true;RedirectStandardOutput=$out;RedirectStandardError=$err}
+  if($Args.Count -gt 0){$start.ArgumentList=$Args}
+  $proc=Start-Process @start
   $processes.Add($proc)
   return $proc
 }
