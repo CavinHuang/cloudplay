@@ -67,3 +67,8 @@ $evidence = 'D:\CloudPlay-M1-Evidence'
 ```
 
 该脚本使用临时运行目录及随机临时口令，不依赖系统 Node/npm/Rust，**不启动游戏**、不执行 Sunshine PIN 配对，也不作为视频/音频/输入成功的证据。它只是提前发现服务启动及路径配置问题。
+
+
+## 从游戏库触发本机 SuperTuxKart
+
+Windows 发行包内提供 `LOCAL-QUICK-PLAY.md`。在已安装 Sunshine、Moonlight Web、合法 SuperTuxKart 的受信任 GPU 主机上，以 `start-active.ps1 -EnableLocalLaunch -GamePath 'C:\\Games\\SuperTuxKart\\supertuxkart.exe'` 启动。打开 `http://127.0.0.1:3000/games/supertuxkart`，点击“本机启动游戏”，在 Player 中通过 Moonlight Web 配对后连接 Sunshine Desktop；记录真实视频、音频、输入、停止及重连证据。公开 Next.js 会话提供者仍禁用。必须通过 M1 三次真实会话要求才能认定可玩。
