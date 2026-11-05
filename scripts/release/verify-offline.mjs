@@ -20,7 +20,7 @@ export function verify(root){
     'deploy/start-cloudplay.ps1','deploy/stop-cloudplay.ps1','deploy/install-offline.mjs',
     'deploy/verify-offline.mjs','deploy/smoke-windows-offline.ps1','deploy/smoke-windows-services.ps1','deploy/smoke-windows-installed-runtime.ps1','deploy/install-cloudplay.ps1',
     'deploy/start-active.ps1','deploy/stop-active.ps1','THIRD-PARTY-NOTICE.md',
-    'M1-ACCEPTANCE.md',
+    'M1-ACCEPTANCE.md','LOCAL-QUICK-PLAY.md',
     'services/p0/lib/lab/m1-acceptance.mjs',
     'services/p0/scripts/p0/m1-host-preflight.ps1',
     'services/p0/scripts/p0/create-m1-index.mjs',
