@@ -121,6 +121,9 @@ try {
   $authToken=[IO.File]::ReadAllText((Join-Path $root 'state\.p0-lab-token')).Trim()
   if($summaryRaw.Contains($authToken)){throw 'M1 review summary leaked local credential'}
   Write-Host 'PASS: M1 installed Prepare/Check/Review, no-GPU refusal, immutable first preflight and no fabricated evidence.'
+  # Simulate the native verifier leaving failure code 1 even after its exception
+  # was intentionally caught; the PowerShell stop wrapper must not read it.
+  $global:LASTEXITCODE=1
   Stop-Installed
   & (Join-Path $root 'start-active.ps1') | Out-Host
   Wait-Server
