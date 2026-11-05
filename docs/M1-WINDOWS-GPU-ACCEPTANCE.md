@@ -2,6 +2,36 @@
 
 CloudPlay 的 Windows **离线编译、启动、安装、升级/回滚**均已在 GitHub Actions Windows Runner 验证。下一道关卡是**真实 NVIDIA GPU + Sunshine + 浏览器 + SuperTuxKart**。本仓库内提供 M1 主机预检、三次会话证据索引和一致性校验，不模拟实际游戏画面，也不自动声称玩家真的听到声音或操作了游戏。
 
+## 推荐：安装后的统一 M1 验收入口
+
+从本仓库 `main` 的完整 Windows 离线发行 Artifact 安装或升级 CloudPlay 后，运行：
+
+```powershell
+& 'D:\CloudPlay\m1-accept.ps1' -Action Prepare `
+  -GamePath 'C:\Games\SuperTuxKart\supertuxkart.exe' -OpenBrowser
+```
+
+`Prepare` 会验证正在安装的完整离线版本；如果 CloudPlay 服务尚未启动，则使用本机、明确授权的游戏路径启动服务；创建**空白** `evidence\m1\m1-index.json`；采集布尔型 GPU/Sunshine/Agent/网站预检。不会自动启动游戏、进行 Sunshine PIN 配对、制造媒体帧或勾选人工验证。已运行但没有打开 Local Operator 时，会拒绝更改模式，请手动执行 `stop-active.ps1` 后重试。
+
+测试过程中只想查看新状态、且不覆盖第一次的主机报告：
+
+```powershell
+& 'D:\CloudPlay\m1-accept.ps1' -Action Check `
+  -GamePath 'C:\Games\SuperTuxKart\supertuxkart.exe'
+```
+
+`Check` 写入 `host-check-latest.json`，不覆盖 `host-preflight.json`。实际三轮新会话仍需由操作者在 Player 中完成真实画面、声音、输入、退出回收与第三轮 ICE 断线恢复，分别下载 `cycle-N-media.json`、`cycle-N-manual.json`，另存脱敏 `cycle-N.png` 到 `D:\CloudPlay\evidence\m1\`。
+
+三轮完成后：
+
+```powershell
+& 'D:\CloudPlay\m1-accept.ps1' -Action Review
+```
+
+`Review` 使用离线发行包内置 Node 执行独立校验，输出**脱敏** `review-result.json`，缺少素材或只存在虚假的 WebRTC 指标会返回失败，并不会声称实际游戏已经可玩。升级/回滚时，`m1-accept.ps1` 随安装槽位更新，历史证据文件始终保留在版本槽位之外。不从公网执行此脚本，也不将 `state\` 或原始 Token 打包上传。
+
+下面保留的底层脚本用法用于诊断或高级操作。
+
 ## 一次性准备
 
 从 [main 的 Windows 发行流程](https://github.com/CavinHuang/cloudplay/actions/workflows/offline-windows-release.yml) 取得包含 `runtime/node.exe`、`deploy/`、`services/p0/`、`services/moonlight/` 和 `manifest.json` 的完整 Artifact。Sunshine、显卡驱动、游戏必须**合法安装**在本机；首次 Moonlight Web PIN 配对需要在本机交互完成。不要公开 7788 调试接口、Sunshine 管理页、Token 或账号配对数据。
