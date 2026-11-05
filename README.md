@@ -1,3 +1,9 @@
+## M1 实机验收入口（已安装的 Windows 完整离线包）
+
+`& 'D:\CloudPlay\m1-accept.ps1' -Action Prepare -GamePath 'C:\Games\SuperTuxKart\supertuxkart.exe' -OpenBrowser`
+
+该命令安全地准备本机服务、空白证据索引和布尔型 GPU 主机检查；`-Action Check` 刷新诊断但不覆盖初次证据，`-Action Review` 校验真实三轮会话并生成脱敏复核结果。脚本已打入 Windows 离线发行包并在安装、升级与回滚时同步到安装根目录。**自动安装/构建成功仍不等于真实 GPU 游戏可玩。**
+
 ## M1 本机启动 SuperTuxKart（实验功能）
 
 CloudPlay **Windows full 离线安装包**现在支持在受信任的单台 NVIDIA Windows 主机上，通过游戏详情页点击 Play 发起真实、受控的 SuperTuxKart 本机游戏进程，并在 Player 页面通过 Moonlight Web 登录、配对及连接该进程，或停止该会话。仍需真实 GPU 验证画面/音频/控制器；不代表公共云游戏平台已经可用。
