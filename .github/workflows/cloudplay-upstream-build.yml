@@ -2,6 +2,12 @@ name: CloudPlay pinned Moonlight Web integration build
 # Opt-in: compiling the Rust + TypeScript upstream can be expensive. No
 # untrusted PR may execute this workflow with secrets or GPU access.
 on:
+  push:
+    branches: [main, feat/m1-real-gpu-acceptance]
+    paths:
+      - 'integrations/moonlight-web/cloudplay-p0-telemetry.ts'
+      - 'scripts/p0/integrate-moonlight-web.mjs'
+      - '.github/workflows/cloudplay-upstream-build.yml'
   workflow_dispatch:
     inputs:
       build_native_linux:

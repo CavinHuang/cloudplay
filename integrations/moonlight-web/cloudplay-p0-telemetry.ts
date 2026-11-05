@@ -65,6 +65,7 @@ export function attachCloudPlayP0Telemetry(peer: RTCPeerConnection): { dispose()
     let channel: Channel | null = null
     let interval: number | null = null
     let inFlight = false, disposed = false
+    let latestStats: ReturnType<typeof summarize> | null = null
     const send = (type: string, stats?: ReturnType<typeof summarize>) => {
         if (!channel || disposed) return
         parent.postMessage({ protocol: PROTOCOL, sessionId: channel.sessionId,
@@ -73,10 +74,26 @@ export function attachCloudPlayP0Telemetry(peer: RTCPeerConnection): { dispose()
     async function sample() {
         if (!channel || disposed || inFlight || peer.connectionState === 'closed') return
         inFlight = true
-        try { send('stats', summarize(peer, await peer.getStats())) }
+        try {
+            const current = summarize(peer, await peer.getStats())
+            latestStats = current
+            send('stats', current)
+        }
         catch { /* closed or renegotiating stream; do not interfere with Moonlight */ }
         finally { inFlight = false }
     }
+    // Short ICE disconnect/reconnect events may fall between 1500ms polls.
+    // Emit a sanitized snapshot on the state transition itself, then refresh.
+    // No candidate, IP, SDP or peer credential is ever included.
+    const onStateChange = () => {
+        if (!channel || disposed) return
+        if (latestStats) send('stats', { ...latestStats,
+            connectionState: state(peer.connectionState),
+            iceConnectionState: state(peer.iceConnectionState) })
+        void sample()
+    }
+    peer.addEventListener('connectionstatechange', onStateChange)
+    peer.addEventListener('iceconnectionstatechange', onStateChange)
     const onMessage = (event: MessageEvent<ParentHello>) => {
         if (disposed || event.source !== parent || event.origin !== PARENT_ORIGIN) return
         const data = event.data
@@ -93,6 +110,8 @@ export function attachCloudPlayP0Telemetry(peer: RTCPeerConnection): { dispose()
         if (disposed) return
         disposed = true
         window.removeEventListener('message', onMessage)
+        peer.removeEventListener('connectionstatechange', onStateChange)
+        peer.removeEventListener('iceconnectionstatechange', onStateChange)
         if (interval !== null) window.clearInterval(interval)
         channel = null; interval = null
     } }

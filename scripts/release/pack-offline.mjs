@@ -130,6 +130,7 @@ function assembleUnsafe(opts) {
     }
     copyFile(path.join(repo,'third_party','NOTICE.md'),path.join(out,'THIRD-PARTY-NOTICE.md'),'Notices');
     copyFile(path.join(repo,'docs','OFFLINE-DEPLOYMENT.md'),path.join(out,'DEPLOYMENT.md'),'Deployment instructions');
+    copyFile(path.join(repo,'docs','M1-WINDOWS-GPU-ACCEPTANCE.md'),path.join(out,'M1-ACCEPTANCE.md'),'GPU host acceptance runbook');
   }
   const sums=listFiles(out).map(f=>`${hash(f)}  ${path.relative(out,f).split(path.sep).join('/')}`).join('\n')+'\n';
   fs.writeFileSync(path.join(out,'SHA256SUMS'),sums);
