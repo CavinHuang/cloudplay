@@ -18,7 +18,7 @@ export function verify(root){
     'services/p0/lab/coordinator.mjs','services/p0/lab/agent.mjs',
     'source/moonlight-web/LICENSE','source/moonlight-web/web/stream/transport/webrtc.ts',
     'deploy/start-cloudplay.ps1','deploy/stop-cloudplay.ps1','deploy/install-offline.mjs',
-    'deploy/verify-offline.mjs','deploy/smoke-windows-offline.ps1','deploy/smoke-windows-services.ps1','deploy/smoke-windows-installed-runtime.ps1','deploy/install-cloudplay.ps1',
+    'deploy/verify-offline.mjs','deploy/smoke-windows-offline.ps1','deploy/smoke-windows-services.ps1','deploy/smoke-windows-installed-runtime.ps1','deploy/smoke-windows-local-operator.ps1','deploy/install-cloudplay.ps1',
     'deploy/start-active.ps1','deploy/stop-active.ps1','THIRD-PARTY-NOTICE.md',
     'M1-ACCEPTANCE.md','LOCAL-QUICK-PLAY.md',
     'services/p0/lib/lab/m1-acceptance.mjs',
