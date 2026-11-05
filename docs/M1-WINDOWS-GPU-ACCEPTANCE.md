@@ -20,7 +20,18 @@ CloudPlay 的 Windows **离线编译、启动、安装、升级/回滚**均已�
   -GamePath 'C:\Games\SuperTuxKart\supertuxkart.exe'
 ```
 
-`Check` 写入 `host-check-latest.json`，不覆盖 `host-preflight.json`。实际三轮新会话仍需由操作者在 Player 中完成真实画面、声音、输入、退出回收与第三轮 ICE 断线恢复，分别下载 `cycle-N-media.json`、`cycle-N-manual.json`，另存脱敏 `cycle-N.png` 到 `D:\CloudPlay\evidence\m1\`。
+`Check` 写入 `host-check-latest.json`，不覆盖 `host-preflight.json`。
+
+**修复首次失败的主机基线：** 如果第一次 `Prepare` 时 Sunshine/GPU 等检查未通过，修复驱动和服务后，执行：
+
+```powershell
+& 'D:\CloudPlay\m1-accept.ps1' -Action Rebaseline `
+  -GamePath 'C:\Games\SuperTuxKart\supertuxkart.exe'
+```
+
+`Rebaseline` 必须在**三轮会话中的任何 JSON 或截图及 Review 结果出现之前**执行；它会重新运行全部真实主机检查，仅当 10 项全部通过时才将新预检作为基线，同时把旧的布尔检查报告另存为带时间戳的历史文件。若尚未修复 GPU/Sunshine、已有真实媒体证据，或新检查未通过，原基线保持不变。不要通过删除真实证据来绕过锁定，已开始游戏验收应重新开始一套独立的验收目录。
+
+实际三轮新会话仍需由操作者在 Player 中完成真实画面、声音、输入、退出回收与第三轮 ICE 断线恢复，分别下载 `cycle-N-media.json`、`cycle-N-manual.json`，另存脱敏 `cycle-N.png` 到 `D:\CloudPlay\evidence\m1\`。
 
 三轮完成后：
 
