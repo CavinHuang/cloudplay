@@ -89,9 +89,14 @@ try {
   $p0=Join-Path $root 'services\p0'
   Push-Location $p0
   try {
-    $launchArgs=@()
-    if($EnableLocalLaunch){$launchArgs+='-EnableLocalLaunch';$launchArgs+='-GamePath';$launchArgs+=$GamePath}
-    & (Join-Path $p0 'scripts\p0\start-p0-lab.ps1') @launchArgs
+    $labStarter=Join-Path $p0 'scripts\p0\start-p0-lab.ps1'
+    if($EnableLocalLaunch){
+      # Array splatting treats -GamePath as a positional string in PowerShell.
+      # Bind the named parameters directly so a real game path is recognized.
+      & $labStarter -EnableLocalLaunch -GamePath $GamePath
+    }else{
+      & $labStarter
+    }
     if($LASTEXITCODE -and $LASTEXITCODE -ne 0){throw 'P0 launch failed'}
   } finally { Pop-Location }
   if(!$SkipWeb -and $info.mode -eq 'windows-full') {
