@@ -54,7 +54,9 @@ function Assert-PortClosed([int]$Port){
   throw "Installed service port $Port remained listening after stop"
 }
 function Start-Installed {
-  & (Join-Path $root 'start-active.ps1')
+  # PowerShell functions return all success-stream output; route launcher logs to
+  # the host, otherwise tokenA includes first-start 'Generated token' text.
+  & (Join-Path $root 'start-active.ps1') | Out-Host
 
   foreach($p in @(7788,8080,3000)){Assert-PortBound $p}
   Wait-Web 'http://127.0.0.1:7788/health' 'cloudplay-p0-lab' $true
