@@ -78,3 +78,23 @@ test('M2 restart discards live host claims and expires orphan reservations',()=>
  assert.throws(()=>restarted.restore(saved));
  assert.throws(()=>createAdmissionManager().restore({...saved,reservations:[saved.reservations[0],saved.reservations[0]]}));
 });
+
+
+test('M2 prunes aged journal history and does not overwrite a duplicate reservation UUID',()=>{
+ const now=Date.parse('2026-11-05T08:00:00Z'),old=now-3*86400000;
+ const id='55555555-5555-4555-8555-555555555555';
+ const m=createAdmissionManager({clock:()=>now,enabledGames:['supertuxkart'],id:()=>id});
+ const history=Array.from({length:500},(_,n)=>({
+  id:`00000000-0000-4000-8000-${String(n+1).padStart(12,'0')}`,
+  ownerId:'operator'+n,gameId:'supertuxkart',hostId:'hostA',
+  idempotencyKey:'request_'+String(n).padStart(8,'0'),state:'released',
+  createdAt:old,expiresAt:old+120000,reason:'OPERATOR_RELEASED'
+ }));
+ m.restore({schema:'cloudplay.m2.reservations.v1',reservations:history});
+ m.heartbeat('hostA',good);
+ assert.equal(m.reserve(params()).status,201);
+ assert.ok(m.status().reservations.length<=500);
+ assert.equal(m.release(id,{ownerId:'tester-one'}).status,200);
+ assert.equal(m.reserve(params('tester-two','request_0002')).code,'RESERVATION_ID_COLLISION');
+ assert.equal(m.status().reservations.find(t=>t.id===id).state,'released');
+});
