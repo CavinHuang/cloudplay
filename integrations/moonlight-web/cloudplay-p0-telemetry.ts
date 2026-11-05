@@ -6,11 +6,12 @@
  * This is cooperative diagnostic data, NOT proof of visible gameplay.
  */
 const PROTOCOL = 'cloudplay.p0.media.v1'
-const PARENT_ORIGIN = 'http://127.0.0.1:7788'
+// Exact, trusted, loopback-only CloudPlay player origins. Never use a wildcard.
+const PARENT_ORIGINS = new Set(['http://127.0.0.1:7788', 'http://127.0.0.1:3000'])
 const SESSION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const CHALLENGE = /^[0-9a-f]{32,128}$/i
 
-type Channel = { sessionId: string, challenge: string }
+type Channel = { sessionId: string, challenge: string, origin: string }
 type ParentHello = { protocol?: unknown, type?: unknown, sessionId?: unknown, challenge?: unknown }
 const safeCount = (x: unknown): number | null => typeof x === 'number' && Number.isSafeInteger(x) && x >= 0 && x <= 1e12 ? x : null
 const safeLoss = (x: unknown): number | null => typeof x === 'number' && Number.isSafeInteger(x) && x >= 0 && x <= 1e9 ? x : null
@@ -69,7 +70,7 @@ export function attachCloudPlayP0Telemetry(peer: RTCPeerConnection): { dispose()
     const send = (type: string, stats?: ReturnType<typeof summarize>) => {
         if (!channel || disposed) return
         parent.postMessage({ protocol: PROTOCOL, sessionId: channel.sessionId,
-            challenge: channel.challenge, type, ...(stats ? { stats } : {}) }, PARENT_ORIGIN)
+            challenge: channel.challenge, type, ...(stats ? { stats } : {}) }, channel.origin)
     }
     async function sample() {
         if (!channel || disposed || inFlight || peer.connectionState === 'closed') return
@@ -95,12 +96,12 @@ export function attachCloudPlayP0Telemetry(peer: RTCPeerConnection): { dispose()
     peer.addEventListener('connectionstatechange', onStateChange)
     peer.addEventListener('iceconnectionstatechange', onStateChange)
     const onMessage = (event: MessageEvent<ParentHello>) => {
-        if (disposed || event.source !== parent || event.origin !== PARENT_ORIGIN) return
+        if (disposed || event.source !== parent || !PARENT_ORIGINS.has(event.origin)) return
         const data = event.data
         if (!data || data.protocol !== PROTOCOL || data.type !== 'hello' ||
             typeof data.sessionId !== 'string' || !SESSION_ID.test(data.sessionId) ||
             typeof data.challenge !== 'string' || !CHALLENGE.test(data.challenge)) return
-        channel = { sessionId: data.sessionId, challenge: data.challenge }
+        channel = { sessionId: data.sessionId, challenge: data.challenge, origin: event.origin }
         send('hello_ack')
         if (interval === null) interval = window.setInterval(() => { void sample() }, 1500)
         void sample()
