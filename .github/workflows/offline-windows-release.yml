@@ -4,7 +4,7 @@ name: Build complete Windows offline deployment bundle
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, feat/m1-installed-start-stop-runtime]
     tags: ['v*']
     paths:
       - '.github/workflows/offline-windows-release.yml'
@@ -180,3 +180,20 @@ jobs:
         run: |
           & .\release\deploy\smoke-windows-services.ps1 -BundlePath .\release
           if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Live P0 service smoke failed' }
+
+  offline-installed-runtime-acceptance:
+    name: Install and run actual user-facing start-active/stop-active twice
+    needs: offline-services-acceptance
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Download this build's verified artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: CloudPlay-Windows-Offline-v0.12.0
+          path: release
+      - name: Verify installed release start, stop, cleanup, restart and persistence
+        shell: pwsh
+        run: |
+          & .\release\deploy\smoke-windows-installed-runtime.ps1 -BundlePath .\release
+          if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Installed runtime acceptance failed' }

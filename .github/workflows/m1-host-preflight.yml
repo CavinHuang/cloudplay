@@ -6,11 +6,17 @@ on:
     branches: [main]
     paths:
       - 'scripts/p0/m1-host-preflight.ps1'
+      - 'scripts/p0/stop-p0-lab.ps1'
+      - 'tests/windows-idle-stop.ps1'
+      - 'tests/fixtures/m1-idle-coordinator.mjs'
       - 'lib/lab/m1-acceptance.mjs'
       - '.github/workflows/m1-host-preflight.yml'
   pull_request:
     paths:
       - 'scripts/p0/m1-host-preflight.ps1'
+      - 'scripts/p0/stop-p0-lab.ps1'
+      - 'tests/windows-idle-stop.ps1'
+      - 'tests/fixtures/m1-idle-coordinator.mjs'
       - 'lib/lab/m1-acceptance.mjs'
       - '.github/workflows/m1-host-preflight.yml'
 permissions:
@@ -37,3 +43,9 @@ jobs:
           if ($content -match '(?i)token|secret|password|candidate|ipAddress|localAddress|hostname|192\.168\.') { throw 'Preflight exported a sensitive field' }
           node --input-type=module -e "import {assessHostPreflight} from './lib/lab/m1-acceptance.mjs';import fs from 'node:fs';const r=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));const a=assessHostPreflight(r);if(!a.valid||a.ready)process.exit(1);" $out
           if ($LASTEXITCODE -ne 0) { throw 'M1 host schema validation failed' }
+
+      - name: Verify idle shutdown with empty sessions on real Windows
+        shell: pwsh
+        run: |
+          & .\tests\windows-idle-stop.ps1
+          if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Windows idle lab stop test failed' }
