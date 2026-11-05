@@ -16,7 +16,7 @@ try {
   $headers=@{Authorization="Bearer $token"}
   $base='http://127.0.0.1:7788'
   $sessions=Invoke-RestMethod -Uri "$base/internal/lab/sessions" -Headers $headers -TimeoutSec 3
-  foreach ($item in @($sessions.sessions)) {
+  foreach ($item in @($sessions.sessions | Where-Object { $_ -ne $null })) {
     if ($item.state -in @('starting','connecting','reconnecting','stopping','failed')) {
       Write-Host "Requesting game stop for session $($item.id)..."
       Invoke-RestMethod -Uri "$base/internal/lab/sessions/$($item.id)" -Method Delete -Headers $headers -TimeoutSec 3 | Out-Null
@@ -27,7 +27,7 @@ try {
     Start-Sleep -Milliseconds 750
     $state=Invoke-RestMethod -Uri "$base/internal/status" -Headers $headers -TimeoutSec 3
     $active=@($state.sessions | Where-Object { $_.state -in @('starting','connecting','reconnecting','stopping') })
-    $games=@($state.hosts | Where-Object { $_.activeGame.state -eq 'running' })
+    $games=@($state.hosts | Where-Object { $_ -ne $null -and $_.activeGame -ne $null -and $_.activeGame.state -eq 'running' })
     if ($active.Count -eq 0 -and $games.Count -eq 0) {$sessionSafe=$true;break}
   }
   if (-not $sessionSafe) {throw 'Game process may still be running; automatic shutdown was NOT confirmed'}
