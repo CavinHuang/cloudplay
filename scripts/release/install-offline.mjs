@@ -50,7 +50,7 @@ function ensureVerifiedSlot(root,id){
   return verify(p);
 }
 function installManagerScripts(root,candidate){
-  for(const n of ['start-active.ps1','stop-active.ps1']) {
+  for(const n of ['start-active.ps1','stop-active.ps1','m1-accept.ps1']) {
     const from=path.join(candidate,'deploy',n);
     if(!fs.existsSync(from))throw new Error(`Installer companion script missing: deploy/${n}`);
     // Trusted only after entire candidate verification.

@@ -101,7 +101,7 @@ try {
   $installed=Check-Status
   if(!$installed.installed -or $installed.previous){throw 'Unexpected installed release pointer'}
   $active=$installed.active
-  foreach($entry in @('start-active.ps1','stop-active.ps1','state','active.json')){
+  foreach($entry in @('start-active.ps1','stop-active.ps1','m1-accept.ps1','state','active.json')){
     if(!(Test-Path -LiteralPath (Join-Path $root $entry))){throw "Installed entry missing: $entry"}
   }
   $tokenA=Start-Installed

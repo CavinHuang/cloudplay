@@ -88,6 +88,42 @@ try {
   Verify-Status (Status-Request $path 'POST' 'http://127.0.0.1:3000' '1' $json) 409 'No-GPU launch refused'
   Verify-Status (Status-Request '/api/v1/p0/status') 404 'P0 debug API disabled in production'
 
+  # The installed M1 entrypoint must work without any global Node/npm/Rust.
+  # A GPU-less CI host may initialize a REAL evidence index, but never
+  # manufacture a frame, screenshot or success witness.
+  $evidence=Join-Path $workspace 'm1-evidence'
+  & (Join-Path $root 'm1-accept.ps1') -Action Prepare -GamePath $fixture -EvidenceDir $evidence | Out-Host
+  $index=Join-Path $evidence 'm1-index.json'
+  $firstReport=Join-Path $evidence 'host-preflight.json'
+  if(!(Test-Path -LiteralPath $index) -or !(Test-Path -LiteralPath $firstReport)){
+    throw 'M1 installed acceptance failed to create index and real host preflight'
+  }
+  $pre=Get-Content -LiteralPath $firstReport -Raw | ConvertFrom-Json
+  if($pre.ready -ne $false -or $pre.checks.nvidiaGpuDetected -ne $false){
+    throw 'GPU-less M1 preflight incorrectly reported ready'
+  }
+  & (Join-Path $root 'm1-accept.ps1') -Action Check -GamePath $fixture -EvidenceDir $evidence | Out-Host
+  if(!(Test-Path -LiteralPath (Join-Path $evidence 'host-check-latest.json'))){
+    throw 'M1 Check did not write a separate current host snapshot'
+  }
+  $reviewRejected=$false
+  try{
+    & (Join-Path $root 'm1-accept.ps1') -Action Review -EvidenceDir $evidence | Out-Host
+  }catch{$reviewRejected=$true}
+  if(!$reviewRejected){throw 'M1 Review accepted missing real GPU sessions'}
+  $summaryPath=Join-Path $evidence 'review-result.json'
+  if(!(Test-Path -LiteralPath $summaryPath)){throw 'M1 Review did not persist its safe failure summary'}
+  $summaryRaw=Get-Content -LiteralPath $summaryPath -Raw
+  $summary=$summaryRaw | ConvertFrom-Json
+  if($summary.readyForIndependentReview -ne $false -or @($summary.failures).Count -eq 0){
+    throw 'M1 Review failed to identify absent media/screenshot/witness evidence'
+  }
+  $authToken=[IO.File]::ReadAllText((Join-Path $root 'state\.p0-lab-token')).Trim()
+  if($summaryRaw.Contains($authToken)){throw 'M1 review summary leaked local credential'}
+  Write-Host 'PASS: M1 installed Prepare/Check/Review, no-GPU refusal, immutable first preflight and no fabricated evidence.'
+  # Simulate the native verifier leaving failure code 1 even after its exception
+  # was intentionally caught; the PowerShell stop wrapper must not read it.
+  $global:LASTEXITCODE=1
   Stop-Installed
   & (Join-Path $root 'start-active.ps1') | Out-Host
   Wait-Server
