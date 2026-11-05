@@ -103,6 +103,7 @@ function assembleUnsafe(opts) {
     copyFile(path.join(repo,'scripts','release','smoke-windows-services.ps1'),path.join(out,'deploy','smoke-windows-services.ps1'),'Live Windows service boot smoke');
     copyFile(path.join(repo,'scripts','release','smoke-windows-installed-runtime.ps1'),path.join(out,'deploy','smoke-windows-installed-runtime.ps1'),'Installed Windows launch/stop smoke');
     copyFile(path.join(repo,'scripts','release','smoke-windows-local-operator.ps1'),path.join(out,'deploy','smoke-windows-local-operator.ps1'),'Local Quick Play negative API contract');
+    copyFile(path.join(repo,'scripts','release','smoke-m2-offline.mjs'),path.join(out,'deploy','smoke-m2-offline.mjs'),'Installed private M2 real HTTP contract and restart smoke');
     copyFile(opts['moonlight-server'],path.join(out,'services','moonlight','web-server.exe'),'Moonlight Windows executable');
     copyTree(opts['moonlight-static'],path.join(out,'services','moonlight','static'));
     // The complete corresponding patched Moonlight source is included in the
