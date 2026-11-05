@@ -24,6 +24,20 @@ on:
       - 'integrations/moonlight-web/cloudplay-p0-telemetry.ts'
       - 'docs/M1-WINDOWS-GPU-ACCEPTANCE.md'
 
+  # Rebuild a real native Windows artifact for trusted same-repository PRs before merge.
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/offline-windows-release.yml'
+      - 'integrations/moonlight-web/cloudplay-p0-telemetry.ts'
+      - 'components/PlayerView.jsx'
+      - 'components/useLocalMoonlightEvidence.js'
+      - 'components/LocalMediaEvidencePanel.jsx'
+      - 'lib/lab/local-media-session.mjs'
+      - 'scripts/p0/**'
+      - 'scripts/release/**'
+      - 'deploy/windows/**'
+
 concurrency:
   group: cloudplay-windows-offline-${{ github.ref }}
   cancel-in-progress: true
@@ -31,6 +45,7 @@ permissions:
   contents: read
 jobs:
   windows-offline-bundle:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: windows-latest
     timeout-minutes: 120
     steps:
