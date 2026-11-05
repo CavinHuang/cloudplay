@@ -113,3 +113,11 @@ test('host preflight cannot declare itself ready when GPU or services fail',()=>
  assert.deepEqual(assessHostPreflight(h).failedChecks,['agentHeartbeat']);
  h.checks.sessionToken='SECRET';assert.equal(assessHostPreflight(h).valid,false);
 });
+
+test('missing host report cannot leak private absolute paths through verifier errors',()=>withFixture(f=>{
+ fs.unlinkSync(path.join(f.dir,'host-preflight.json'));
+ const cli=spawnSync(process.execPath,['scripts/p0/verify-m1-acceptance.mjs',path.join(f.dir,'m1-index.json')],{cwd:path.resolve('.'),encoding:'utf8'});
+ assert.equal(cli.status,1);
+ assert.match(cli.stderr,/EVIDENCE_FILE_NOT_FOUND/);
+ assert.equal(cli.stderr.includes(f.dir),false);
+}));
