@@ -1,3 +1,13 @@
+## M1 本机启动 SuperTuxKart（实验功能）
+
+CloudPlay **Windows full 离线安装包**现在支持在受信任的单台 NVIDIA Windows 主机上，通过游戏详情页点击 Play 发起真实、受控的 SuperTuxKart 本机游戏进程，并在 Player 页面通过 Moonlight Web 登录、配对及连接该进程，或停止该会话。仍需真实 GPU 验证画面/音频/控制器；不代表公共云游戏平台已经可用。
+
+```powershell
+& 'D:\CloudPlay\start-active.ps1' -EnableLocalLaunch -GamePath 'C:\Games\SuperTuxKart\supertuxkart.exe'
+```
+
+随后在**同一台电脑**打开 `http://127.0.0.1:3000/games/supertuxkart`；首次使用 Moonlight Web 请连接 Sunshine Desktop 并配对。**不通过局域网或公网暴露该 Operator**，不要复制开发 Token 到浏览器。完整部署与安全限制见 [M1 Local Quick Play](docs/M1-LOCAL-QUICK-PLAY.md)，[GPU 真实验收](docs/M1-WINDOWS-GPU-ACCEPTANCE.md)。
+
 # CloudPlay 当前交付状态（2026-11-05）
 
 **已经真实通过：** [GitHub main 的 Windows 完整离线发行](https://github.com/CavinHuang/cloudplay/actions/runs/41817727133)（Windows 原生 Moonlight、Next.js、内置 Node、校验/安装/升级回滚）；在 [PR #4](https://github.com/CavinHuang/cloudplay/pull/4) 的 M1 开发中，新增了 GPU 主机预检、三次实机游玩证据包和 ICE 断线恢复采样，普通 CI **121 项测试及 Next.js 构建通过**。

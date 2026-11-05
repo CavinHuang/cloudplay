@@ -29,6 +29,7 @@ $env:CLOUDPLAY_STATE_DIR=$stateRoot
 $game=Join-Path $root 'games\supertuxkart\supertuxkart.exe'
 if(!$GamePath -and (Test-Path $game)){$GamePath=$game}
 if($EnableLocalLaunch -and (!$GamePath -or !(Test-Path $GamePath))){throw 'Game executable missing. Specify -GamePath pointing to an installed, licensed SuperTuxKart.'}
+if($EnableLocalLaunch -and [IO.Path]::GetFileName($GamePath) -ine 'supertuxkart.exe'){throw 'Local M1 launching only accepts the SuperTuxKart executable.'}
 $existing=@(7788,8080)
 if(!$SkipWeb -and $info.mode -eq 'windows-full'){$existing+=3000}
 foreach($port in $existing){
@@ -88,9 +89,14 @@ try {
   $p0=Join-Path $root 'services\p0'
   Push-Location $p0
   try {
-    $launchArgs=@()
-    if($EnableLocalLaunch){$launchArgs+='-EnableLocalLaunch';$launchArgs+='-GamePath';$launchArgs+=$GamePath}
-    & (Join-Path $p0 'scripts\p0\start-p0-lab.ps1') @launchArgs
+    $labStarter=Join-Path $p0 'scripts\p0\start-p0-lab.ps1'
+    if($EnableLocalLaunch){
+      # Array splatting treats -GamePath as a positional string in PowerShell.
+      # Bind the named parameters directly so a real game path is recognized.
+      & $labStarter -EnableLocalLaunch -GamePath $GamePath
+    }else{
+      & $labStarter
+    }
     if($LASTEXITCODE -and $LASTEXITCODE -ne 0){throw 'P0 launch failed'}
   } finally { Pop-Location }
   if(!$SkipWeb -and $info.mode -eq 'windows-full') {
@@ -99,6 +105,8 @@ try {
     $env:PORT='3000'
     $env:HOSTNAME='127.0.0.1'
     $env:CLOUDPLAY_P0_UI_ENABLED='0'  # production P0 lab APIs remain disabled
+    # Explicit local-only operator bridge; browser never learns P0 auth token.
+    $env:CLOUDPLAY_LOCAL_OPERATOR_ENABLED=$(if($EnableLocalLaunch){'1'}else{'0'})
     $webProc=Start-Process -FilePath $node -ArgumentList @('server.js') -WorkingDirectory $webDir -PassThru -RedirectStandardOutput (Join-Path $logRoot 'web.out.log') -RedirectStandardError (Join-Path $logRoot 'web.err.log')
     $processList.web=$webProc.Id
     $webReady=$false
@@ -116,7 +124,8 @@ try {
   Write-Host 'CloudPlay local lab started. No downloads performed.'
   Write-Host 'Operator: http://127.0.0.1:7788/monitor'
   Write-Host 'Moonlight: http://127.0.0.1:8080/'
-  if($processList.web){Write-Host 'Catalog: http://127.0.0.1:3000/ (production-safe, P0 APIs disabled)'}
+  if($processList.web){Write-Host 'Catalog: http://127.0.0.1:3000/ (P0 debug APIs disabled)'}
+  if($processList.web -and $EnableLocalLaunch){Write-Host 'Local Quick Play: http://127.0.0.1:3000/games/supertuxkart (one trusted Windows host only)'}
   Write-Host 'To stop: .\deploy\stop-cloudplay.ps1'
 } catch {
   if($processList.web){Stop-Process -Id $processList.web -ErrorAction SilentlyContinue}

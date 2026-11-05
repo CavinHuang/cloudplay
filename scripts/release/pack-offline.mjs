@@ -98,6 +98,7 @@ function assembleUnsafe(opts) {
     copyFile(path.join(repo,'scripts','release','smoke-windows-offline.ps1'),path.join(out,'deploy','smoke-windows-offline.ps1'),'Offline Windows startup smoke');
     copyFile(path.join(repo,'scripts','release','smoke-windows-services.ps1'),path.join(out,'deploy','smoke-windows-services.ps1'),'Live Windows service boot smoke');
     copyFile(path.join(repo,'scripts','release','smoke-windows-installed-runtime.ps1'),path.join(out,'deploy','smoke-windows-installed-runtime.ps1'),'Installed Windows launch/stop smoke');
+    copyFile(path.join(repo,'scripts','release','smoke-windows-local-operator.ps1'),path.join(out,'deploy','smoke-windows-local-operator.ps1'),'Local Quick Play negative API contract');
     copyFile(opts['moonlight-server'],path.join(out,'services','moonlight','web-server.exe'),'Moonlight Windows executable');
     copyTree(opts['moonlight-static'],path.join(out,'services','moonlight','static'));
     // The complete corresponding patched Moonlight source is included in the
@@ -133,6 +134,7 @@ function assembleUnsafe(opts) {
     copyFile(path.join(repo,'third_party','NOTICE.md'),path.join(out,'THIRD-PARTY-NOTICE.md'),'Notices');
     copyFile(path.join(repo,'docs','OFFLINE-DEPLOYMENT.md'),path.join(out,'DEPLOYMENT.md'),'Deployment instructions');
     copyFile(path.join(repo,'docs','M1-WINDOWS-GPU-ACCEPTANCE.md'),path.join(out,'M1-ACCEPTANCE.md'),'GPU host acceptance runbook');
+    copyFile(path.join(repo,'docs','M1-LOCAL-QUICK-PLAY.md'),path.join(out,'LOCAL-QUICK-PLAY.md'),'Local M1 operator runbook');
   }
   const sums=listFiles(out).map(f=>`${hash(f)}  ${path.relative(out,f).split(path.sep).join('/')}`).join('\n')+'\n';
   fs.writeFileSync(path.join(out,'SHA256SUMS'),sums);
