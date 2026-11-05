@@ -1,0 +1,30 @@
+name: CloudPlay installed runtime fast regression
+on:
+  push:
+    branches: [feat/m1-installed-start-stop-runtime]
+    paths:
+      - 'scripts/release/smoke-windows-installed-runtime.ps1'
+      - '.github/workflows/m1-installed-runtime-fast.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  user-facing-start-stop:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          repository: CavinHuang/cloudplay
+          run-id: 41957991231
+          name: CloudPlay-Windows-Offline-v0.12.0
+          github-token: ${{ github.token }}
+          path: release
+      - name: Re-test start and stop using fixed script (downloaded binary from same failing release)
+        shell: pwsh
+        run: |
+          & .\scripts\release\smoke-windows-installed-runtime.ps1 -BundlePath .\release
+          if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Installed runtime regression failed' }
