@@ -23,7 +23,9 @@
     "release:verify": "node scripts/release/verify-offline.mjs",
     "release:pack": "node scripts/release/pack-offline.mjs",
     "release:notices": "node scripts/release/generate-notices.mjs",
-    "release:readiness": "node scripts/release/check-readiness.mjs"
+    "release:readiness": "node scripts/release/check-readiness.mjs",
+    "m2:control": "node scripts/m2/start-control.mjs",
+    "m2:bridge": "node scripts/m2/bridge-local-p0.mjs --watch"
   },
   "engines": {
     "node": ">=22"
