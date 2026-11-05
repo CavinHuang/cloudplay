@@ -22,3 +22,5 @@ jobs:
         run: npm test
       - name: Next.js build
         run: npm run build
+      - name: Built Next.js and live local Coordinator contract
+        run: node scripts/ci/smoke-local-api-live.mjs
