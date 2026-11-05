@@ -52,8 +52,8 @@ if($Action -eq 'Rebaseline'){
   # A rebaseline is ONLY allowed before any media, witness, screenshot, or
   # review artifact exists. Never allow rebaselining completed/partial sessions.
   foreach($cycle in 1..3){
-    foreach($suffix in @('media.json','manual.json','png','jpg','jpeg','webp')){
-      $artifact=Join-Path $evidence ("cycle-$cycle-$suffix")
+    foreach($filename in @("cycle-$cycle-media.json","cycle-$cycle-manual.json","cycle-$cycle.png","cycle-$cycle.jpg","cycle-$cycle.jpeg","cycle-$cycle.webp")){
+      $artifact=Join-Path $evidence $filename
       if(Test-Path -LiteralPath $artifact){throw 'M1_REBASELINE_LOCKED_BY_CYCLE_EVIDENCE'}
     }
   }
