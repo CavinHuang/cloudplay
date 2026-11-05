@@ -15,6 +15,10 @@ test('M2 private P0 bridge never declares missing, multiple or occupied hosts el
  assert.equal(ok.gameProcessBusy,false);assert.equal(ok.drain,false);
  assert.equal(JSON.stringify(ok).includes('PRIVATE_MODEL'),false);
  assert.equal(sanitizeP0ForM2({...raw,sessions:[{state:'connecting'}]}).gameProcessBusy,true);
+ // Coordinator recovery may not yet list the live game session even when
+ // Host Agent still reports an owned game process. Never double-reserve it.
+ assert.equal(sanitizeP0ForM2({...raw,hosts:[{...host,activeGame:{sessionId:'a',state:'running'}}]}).gameProcessBusy,true);
+ assert.equal(sanitizeP0ForM2({...raw,hosts:[{...host,activeGame:{state:'exited'}}]}).gameProcessBusy,false);
 });
 test('M2 bridge sends only allowlisted flags to exact loopback ports',async()=>{
  const calls=[],fetcher=async(url,options)=>{
