@@ -15,7 +15,7 @@ test('NVIDIA detection searches standard Windows driver directories when nvidia-
    assert.deepEqual(args,['--query-gpu=name','--format=csv,noheader']);
    assert.equal(opts.windowsHide,true);
    if(attempted.length<3)throw Error('ENOENT');
-   return 'NVIDIA GeForce RTX 4070 Ti SUPER\\r\\n';
+   return 'NVIDIA GeForce RTX 4070 Ti SUPER\r\n';
  }});
  assert.deepEqual(gpu,{detected:true,model:'NVIDIA GeForce RTX 4070 Ti SUPER'});
  assert.equal(attempted.length,3);
@@ -26,7 +26,7 @@ test('NVIDIA diagnostic fails closed and never passes raw system paths to agent 
  const attempted=[];
  const gpu=getGpu({platform:'win32',env,run:(cmd)=>{
    attempted.push(cmd);
-   if(attempted.length===1)return '\\n\\r\\n';
+   if(attempted.length===1)return '\n\r\n';
    throw Error('no driver');
  }});
  assert.deepEqual(gpu,{detected:false,model:null});
