@@ -48,8 +48,14 @@ try {
       if(!$ready){throw 'Bundled Next.js server failed health check'}
     } finally {if($proc -and !$proc.HasExited){Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue}}
   }
+  # Run a REAL packaged M2 private reservation service. Synthetic host booleans
+  # exercise the control policy only, never pretend that a physical GPU exists.
+  $m2Smoke=Join-Path $root 'deploy\smoke-m2-offline.mjs'
+  if(!(Test-Path -LiteralPath $m2Smoke -PathType Leaf)){throw 'M2 installed runtime smoke missing'}
+  & $node $m2Smoke $root | Out-Host
+  if($LASTEXITCODE -ne 0){throw 'M2 offline real HTTP smoke failed'}
   $ok=$true
-  Write-Host 'PASS: offline manifest, bundled Node, Moonlight --help, and optional Next.js health.'
+  Write-Host 'PASS: offline manifest, bundled Node, Moonlight --help, optional Next.js health and real M2 private HTTP smoke.'
   Write-Host 'NOT CHECKED: Sunshine/GPU video, audio, gamepad, network reachability.'
 } finally {
   $env:PATH=$oldPath;$env:NODE_ENV=$oldNodeEnv;$env:PORT=$oldPort;$env:HOSTNAME=$oldHost
