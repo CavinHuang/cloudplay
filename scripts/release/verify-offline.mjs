@@ -19,7 +19,12 @@ export function verify(root){
     'source/moonlight-web/LICENSE','source/moonlight-web/web/stream/transport/webrtc.ts',
     'deploy/start-cloudplay.ps1','deploy/stop-cloudplay.ps1','deploy/install-offline.mjs',
     'deploy/verify-offline.mjs','deploy/smoke-windows-offline.ps1','deploy/install-cloudplay.ps1',
-    'deploy/start-active.ps1','deploy/stop-active.ps1','THIRD-PARTY-NOTICE.md'];
+    'deploy/start-active.ps1','deploy/stop-active.ps1','THIRD-PARTY-NOTICE.md',
+    'M1-ACCEPTANCE.md',
+    'services/p0/lib/lab/m1-acceptance.mjs',
+    'services/p0/scripts/p0/m1-host-preflight.ps1',
+    'services/p0/scripts/p0/create-m1-index.mjs',
+    'services/p0/scripts/p0/verify-m1-acceptance.mjs'];
  if(m.mode==='windows-full')required.push('services/web/server.js','source/web-DEPENDENCIES.txt');
  const declared=new Set(m.files.map(x=>x.path));
  for(const filename of required)if(!declared.has(filename))throw new Error(`Offline release missing required component: ${filename}`);
