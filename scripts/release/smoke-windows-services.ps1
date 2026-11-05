@@ -25,11 +25,11 @@ $tempBase=if($env:RUNNER_TEMP){$env:RUNNER_TEMP}else{$env:TEMP}
 $work=Join-Path $tempBase ('cloudplay-live-services-'+[guid]::NewGuid().ToString('N'))
 $processes=[System.Collections.Generic.List[object]]::new()
 $passed=$false
-function Start-Owned([string]$Exe,[string[]]$Args,[string]$Cwd,[string]$Name){
+function Start-Owned([string]$Exe,[string[]]$CmdArgs,[string]$Cwd,[string]$Name){
   $out=Join-Path $work ($Name+'.out.log')
   $err=Join-Path $work ($Name+'.err.log')
   $start=@{FilePath=$Exe;WorkingDirectory=$Cwd;PassThru=$true;RedirectStandardOutput=$out;RedirectStandardError=$err}
-  if($Args.Count -gt 0){$start.ArgumentList=$Args}
+  if($CmdArgs.Count -gt 0){$start.ArgumentList=$CmdArgs}
   $proc=Start-Process @start
   $processes.Add($proc)
   return $proc
@@ -55,7 +55,7 @@ try{
   New-Item -ItemType Directory -Path (Join-Path $moonDir 'server') -Force | Out-Null
   Copy-Item -LiteralPath (Join-Path $root 'services\moonlight\static') -Destination (Join-Path $moonDir 'static') -Recurse
   $env:BIND_ADDRESS='127.0.0.1:8080'
-  $moonProc=Start-Owned -Exe $moon -Args @() -Cwd $moonDir -Name 'moonlight'
+  $moonProc=Start-Owned -Exe $moon -CmdArgs @() -Cwd $moonDir -Name 'moonlight'
   Wait-Http 'http://127.0.0.1:8080/config.js' '__CONFIG_JS__' $moonProc | Out-Null
   Wait-Http 'http://127.0.0.1:8080/' '<!doctype html|<html' $moonProc | Out-Null
 
@@ -68,10 +68,10 @@ try{
   $env:CLOUDPLAY_GAME_PATH=$null
   $env:P0_STREAM_URL='http://127.0.0.1:8080/'
   $env:P0_SESSION_JOURNAL=Join-Path $work 'journal.json'
-  $coordinator=Start-Owned -Exe $node -Args @('lab/coordinator.mjs') -Cwd $p0 -Name 'coordinator'
+  $coordinator=Start-Owned -Exe $node -CmdArgs @('lab/coordinator.mjs') -Cwd $p0 -Name 'coordinator'
   Wait-Http 'http://127.0.0.1:7788/health' 'cloudplay-p0-lab' $coordinator | Out-Null
   Wait-Http 'http://127.0.0.1:7788/monitor' 'html' $coordinator | Out-Null
-  $agent=Start-Owned -Exe $node -Args @('lab/agent.mjs') -Cwd $p0 -Name 'agent'
+  $agent=Start-Owned -Exe $node -CmdArgs @('lab/agent.mjs') -Cwd $p0 -Name 'agent'
   $hostSeen=$false
   for($i=0;$i -lt 55;$i++){
     try{
@@ -94,7 +94,7 @@ try{
 
   if(!$SkipWeb -and (Test-Path -LiteralPath (Join-Path $web 'server.js'))){
     $env:NODE_ENV='production';$env:PORT='3000';$env:HOSTNAME='127.0.0.1'
-    $webProc=Start-Owned -Exe $node -Args @('server.js') -Cwd $web -Name 'web'
+    $webProc=Start-Owned -Exe $node -CmdArgs @('server.js') -Cwd $web -Name 'web'
     Wait-Http 'http://127.0.0.1:3000/api/v1/health' '"status":"ok"' $webProc | Out-Null
   }
   $ports=if($SkipWeb){@(7788,8080)}else{@(7788,8080,3000)}
