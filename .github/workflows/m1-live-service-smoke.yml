@@ -1,0 +1,36 @@
+name: CloudPlay M1 real-service runtime smoke
+# The historical artifact is only used on this development branch for quick
+# regression. Permanent releases must download their same-run artifact.
+on:
+  push:
+    branches: [feat/m1-live-service-smoke-gpu-detection]
+    paths:
+      - 'scripts/release/smoke-windows-services.ps1'
+      - 'lib/lab/agent.mjs'
+      - 'tests/m1-gpu-detection.test.mjs'
+      - '.github/workflows/m1-live-service-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  native-windows-services:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Download last proven main Windows full bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: CloudPlay-Windows-Offline-v0.12.0
+          repository: CavinHuang/cloudplay
+          run-id: 41817727133
+          github-token: ${{ github.token }}
+          path: release
+      - name: Validate Moonlight HTTP, coordinator auth, agent heartbeat and Next live
+        shell: pwsh
+        run: |
+          & .\scripts\release\smoke-windows-services.ps1 -BundlePath .\release
+          if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Live offline services contract failed' }
