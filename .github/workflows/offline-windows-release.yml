@@ -4,7 +4,7 @@ name: Build complete Windows offline deployment bundle
 on:
   workflow_dispatch:
   push:
-    branches: [main, feat/m1-installed-start-stop-runtime]
+    branches: [main, feat/m1-local-quick-play]
     tags: ['v*']
     paths:
       - '.github/workflows/offline-windows-release.yml'
@@ -197,3 +197,20 @@ jobs:
         run: |
           & .\release\deploy\smoke-windows-installed-runtime.ps1 -BundlePath .\release
           if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Installed runtime acceptance failed' }
+
+  offline-local-operator-acceptance:
+    name: Real installed local Quick Play policy and no-GPU refusal
+    needs: offline-installed-runtime-acceptance
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Download this workflow's verified Windows full bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: CloudPlay-Windows-Offline-v0.12.0
+          path: release
+      - name: Exercise installed local operator safeguards
+        shell: pwsh
+        run: |
+          & .\release\deploy\smoke-windows-local-operator.ps1 -BundlePath .\release
+          if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Local Quick Play negative acceptance failed' }
