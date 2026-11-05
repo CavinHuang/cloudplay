@@ -163,3 +163,20 @@ jobs:
         run: |
           & .\scripts\release\smoke-windows-install.ps1 -BundlePath .\release
           if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Windows installation acceptance failed' }
+
+  offline-services-acceptance:
+    name: Real Moonlight HTTP and P0 coordinator/agent start
+    needs: offline-install-acceptance
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Download this build's verified offline bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: CloudPlay-Windows-Offline-v0.12.0
+          path: release
+      - name: Boot real local services under clean PATH
+        shell: pwsh
+        run: |
+          & .\release\deploy\smoke-windows-services.ps1 -BundlePath .\release
+          if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Live P0 service smoke failed' }

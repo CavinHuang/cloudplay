@@ -57,3 +57,13 @@ $evidence = 'D:\CloudPlay-M1-Evidence'
 - `EVIDENCE_FILE_INVALID`：文件缺失、过大、路径越界/软链接，截图不是有效 PNG/JPEG/WebP 文件格式。
 
 不要把原始配对数据、`.p0-lab-token`、`state/`、协调器日志上传到公开 GitHub Issue。可共享处理后的总结果、无私人信息的游戏截图和 CI 链接。源码包括所有必要工具，部署机无需下载额外项目。
+
+## M1 运行级别额外校验（无需 GPU，可先排除服务部署问题）
+
+发行工作流在独立 Windows Runner 上下载同一次构建的离线包，启动真正的 Moonlight Web HTTP（8080）、Coordinator（7788）、Host Agent 和 Next.js（3000），检查匿名访问控制、Agent 心跳、静态页面及仅监听本机。也可在受信任的 GPU 主机安装前执行：
+
+```powershell
+.\deploy\smoke-windows-services.ps1 -BundlePath .
+```
+
+该脚本使用临时运行目录及随机临时口令，不依赖系统 Node/npm/Rust，**不启动游戏**、不执行 Sunshine PIN 配对，也不作为视频/音频/输入成功的证据。它只是提前发现服务启动及路径配置问题。
