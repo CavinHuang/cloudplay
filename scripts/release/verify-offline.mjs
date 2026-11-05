@@ -24,7 +24,13 @@ export function verify(root){
     'services/p0/lib/lab/m1-acceptance.mjs',
     'services/p0/scripts/p0/m1-host-preflight.ps1',
     'services/p0/scripts/p0/create-m1-index.mjs',
-    'services/p0/scripts/p0/verify-m1-acceptance.mjs'];
+    'services/p0/scripts/p0/verify-m1-acceptance.mjs',
+    'services/m2/lib/m2/admission.mjs',
+    'services/m2/lib/m2/host-bridge.mjs',
+    'services/m2/lab/m2-coordinator.mjs',
+    'services/m2/scripts/m2/start-control.mjs',
+    'services/m2/scripts/m2/bridge-local-p0.mjs',
+    'M2-CONTROL-PLANE.md'];
  if(m.mode==='windows-full')required.push('services/web/server.js','source/web-DEPENDENCIES.txt');
  const declared=new Set(m.files.map(x=>x.path));
  for(const filename of required)if(!declared.has(filename))throw new Error(`Offline release missing required component: ${filename}`);
