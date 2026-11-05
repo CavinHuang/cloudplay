@@ -1,0 +1,39 @@
+name: CloudPlay M1 Windows hardware-preflight contract
+# CI runner lacks Sunshine/GPU: must report failure without leaking host secrets.
+# This validates PowerShell execution and schema, NOT real gameplay.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/p0/m1-host-preflight.ps1'
+      - 'lib/lab/m1-acceptance.mjs'
+      - '.github/workflows/m1-host-preflight.yml'
+  pull_request:
+    paths:
+      - 'scripts/p0/m1-host-preflight.ps1'
+      - 'lib/lab/m1-acceptance.mjs'
+      - '.github/workflows/m1-host-preflight.yml'
+permissions:
+  contents: read
+jobs:
+  negative-windows-preflight:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Run no-GPU Windows preflight in safe report-only mode
+        shell: pwsh
+        run: |
+          $out=Join-Path $env:RUNNER_TEMP 'm1-host-preflight.json'
+          & .\scripts\p0\m1-host-preflight.ps1 -GamePath (Join-Path $env:RUNNER_TEMP 'game-not-installed.exe') -StateRoot (Join-Path $env:RUNNER_TEMP 'no-private-state') -OutFile $out -ReportOnly
+          $json=Get-Content -LiteralPath $out -Raw | ConvertFrom-Json
+          if ($json.ready -eq $true) { throw 'Hosted Windows without GPU/game should never pass preflight' }
+          $content=[IO.File]::ReadAllText($out)
+          if ($content -match '(?i)token|secret|password|candidate|ipAddress|localAddress|hostname|192\.168\.') { throw 'Preflight exported a sensitive field' }
+          node --input-type=module -e "import {assessHostPreflight} from './lib/lab/m1-acceptance.mjs';import fs from 'node:fs';const r=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));const a=assessHostPreflight(r);if(!a.valid||a.ready)process.exit(1);" $out
+          if ($LASTEXITCODE -ne 0) { throw 'M1 host schema validation failed' }

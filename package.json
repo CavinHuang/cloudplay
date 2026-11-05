@@ -17,6 +17,8 @@
     "check:source": "node scripts/check-source-syntax.mjs",
     "test:webrtc-browser": "python tests/browser-real-webrtc-smoke.py",
     "p0:verify-media": "node scripts/p0/verify-media-evidence.mjs",
+    "m1:index": "node scripts/p0/create-m1-index.mjs",
+    "m1:verify": "node scripts/p0/verify-m1-acceptance.mjs",
     "p0:moonlight:check-bundle": "node scripts/p0/check-moonlight-output.mjs",
     "release:verify": "node scripts/release/verify-offline.mjs",
     "release:pack": "node scripts/release/pack-offline.mjs",
