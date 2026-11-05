@@ -119,7 +119,8 @@ try {
   Write-Host 'CloudPlay local lab started. No downloads performed.'
   Write-Host 'Operator: http://127.0.0.1:7788/monitor'
   Write-Host 'Moonlight: http://127.0.0.1:8080/'
-  if($processList.web){Write-Host 'Catalog: http://127.0.0.1:3000/ (production-safe, P0 APIs disabled)'}
+  if($processList.web){Write-Host 'Catalog: http://127.0.0.1:3000/ (P0 debug APIs disabled)'}
+  if($processList.web -and $EnableLocalLaunch){Write-Host 'Local Quick Play: http://127.0.0.1:3000/games/supertuxkart (one trusted Windows host only)'}
   Write-Host 'To stop: .\deploy\stop-cloudplay.ps1'
 } catch {
   if($processList.web){Stop-Process -Id $processList.web -ErrorAction SilentlyContinue}
