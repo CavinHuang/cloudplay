@@ -11,6 +11,9 @@ on:
       - 'scripts/release/**'
       - 'scripts/p0/**'
       - 'lib/lab/moonlight-toolchain.mjs'
+      - 'lib/lab/m1-acceptance.mjs'
+      - 'lab/player.html'
+      - 'docs/M1-WINDOWS-GPU-ACCEPTANCE.md'
 
 concurrency:
   group: cloudplay-windows-offline-${{ github.ref }}
