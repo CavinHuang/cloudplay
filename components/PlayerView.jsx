@@ -2,9 +2,11 @@
 import Link from 'next/link';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {collectBrowserCapabilities,makeBrowserCapabilityReport} from '../lib/lab/browser-capabilities.mjs';
+import {useLocalMoonlightEvidence} from './useLocalMoonlightEvidence.js';
+import LocalMediaEvidencePanel from './LocalMediaEvidencePanel.jsx';
 
 export default function PlayerView({sessionId}) {
- const stage=useRef(null);
+ const stage=useRef(null),moonlightFrame=useRef(null);
  const p0Id=/^p0-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.exec(sessionId)?.[1];
  const localId=/^local-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.exec(sessionId)?.[1];
  const controlId=p0Id||localId,localMode=Boolean(localId);
@@ -38,6 +40,7 @@ export default function PlayerView({sessionId}) {
  };
  useEffect(()=>{if(!controlId)return;updateLab();const timer=setInterval(updateLab,5000);return()=>clearInterval(timer)},[controlId,updateLab]);
  const canOpen=lab&&['connecting','reconnecting'].includes(lab.state);
+ const {mediaSnapshot,exportMedia}=useLocalMoonlightEvidence(localId,Boolean(localMode&&canOpen&&embedMoonlight),moonlightFrame);
  async function stopLocal(){
   if(!localId||stopBusy)return;
   setStopBusy(true);setStopError(null);
@@ -55,7 +58,7 @@ export default function PlayerView({sessionId}) {
  return <main className="player-page">
   <div className="player-top"><Link href="/library">← 返回游戏库</Link><strong>CLOUDPLAY <span className="muted-text">/ PLAYER</span></strong><span className="status pending">{controlId?(lab?.state||'会话状态未取得'):'布局预览'}</span></div>
   <section ref={stage} className="player-stage">{localMode&&canOpen&&embedMoonlight?
-   <iframe title="Moonlight Web 独立串流客户端" src={localPlayerUrl}
+   <iframe ref={moonlightFrame} title="Moonlight Web 独立串流客户端" src={localPlayerUrl}
     allow="autoplay; fullscreen; gamepad; microphone"
     allowFullScreen referrerPolicy="no-referrer"
     style={{display:'block',width:'100%',height:'100%',minHeight:430,border:0,background:'#080d18'}}/>
@@ -72,11 +75,12 @@ export default function PlayerView({sessionId}) {
   </div>}</section>
   <div className="player-toolbar"><button className="btn secondary" onClick={()=>stage.current?.requestFullscreen?.()}>⛶ 全屏</button>{localMode&&canOpen&&<button className="btn secondary" onClick={()=>setEmbedMoonlight(v=>!v)}>{embedMoonlight?'显示连接说明':'在页面内打开 Moonlight'}</button>}
   {localMode&&canOpen&&<a className="btn secondary" href={localPlayerUrl} target="_blank" rel="noopener noreferrer">在独立标签页打开串流 ↗</a>}{localMode&&lab&&!['finished','cancelled'].includes(lab.state)&&<button className="btn secondary" disabled={stopBusy} onClick={stopLocal}>{stopBusy?'正在请求结束…':'停止本机游戏'}</button>}<button className="btn secondary" onClick={()=>setDiagnostics(v=>!v)}>◉ 浏览器诊断</button>{stopError&&<span className="warn-text" role="alert">停止失败：{stopError}</span>}{localMode?<Link className="btn secondary" href="/games/supertuxkart">返回 SuperTuxKart</Link>
-  :<Link className="btn secondary" href="/p0">查看 P0 主机连接步骤</Link>}{controlId&&<a className="btn secondary" target="_blank" rel="noopener noreferrer" href={`http://127.0.0.1:7788/play/${controlId}`}>本机媒体诊断播放器 ↗</a>}<span className="toolbar-spacer"/><span className="muted-text">画质 / FPS / 延迟：尚无真实数据</span></div>
+  :<Link className="btn secondary" href="/p0">查看 P0 主机连接步骤</Link>}{controlId&&<a className="btn secondary" target="_blank" rel="noopener noreferrer" href={`http://127.0.0.1:7788/play/${controlId}`}>本机媒体诊断播放器 ↗</a>}<span className="toolbar-spacer"/><span className="muted-text">{mediaSnapshot?.stats?`客户端统计：${mediaSnapshot.stats.video.framesPerSecond??"?"} FPS · RTT ${mediaSnapshot.stats.network.roundTripTimeMs??"?"}ms（未独立验证）`:"画质 / FPS / 延迟：尚无真实数据"}</span></div>
   {controlId&&<div className="panel diagnostic-panel"><div className="section-title">本机实验说明</div><p className="small-muted">现在由 P1 服务端校验会话后直接跳转 Moonlight Web，不再要求在中间控制页重复输入 P0 Token。仅限同一 Windows 主机的本地实验；浏览器中的 localhost 指向当前电脑。Moonlight Web 仍需独立登录、PIN 配对，不保证 WebRTC 连接成功。嵌入模式若被浏览器第三方 Cookie 或独立客户端安全策略阻止，请改为新标签页打开。</p></div>}
+  {localMode&&<LocalMediaEvidencePanel sessionId={localId} sessionState={lab?.state} mediaSnapshot={mediaSnapshot} exportMedia={exportMedia}/>}
   {diagnostics&&<div className="panel diagnostic-panel">
     <div className="section-title">浏览器与输入诊断（不读取 Moonlight 实际媒体）</div>
-    <p className="small-muted">这些是浏览器支持能力和本机手柄即时输入，不是 WebRTC 视频帧、音频、真实延迟或游戏是否收到输入的证据。独立 Moonlight Web 页面拥有自己的媒体连接，本站无法跨源获取它的统计。</p>
+    <p className="small-muted">这里展示浏览器能力和本机手柄输入，不是实际游戏画面、声音或输入到达游戏的证明。若本机嵌入式 Moonlight 已集成诊断桥接，可在上方 M1 区域读取脱敏 WebRTC 统计；独立标签页不能共享这些数据。</p>
     {browser&&<>
       {[["安全上下文",browser.secureContext],["WebRTC API",browser.webRTC],["WebCodecs",browser.webCodecs],["Gamepad API",browser.gamepadAPI],["全屏",browser.fullscreen],["Pointer Lock",browser.pointerLock],["Keyboard Lock",browser.keyboardLock]].map(([name,ok])=><div key={name} className="spec-row"><span>{name}</span><strong className={ok?'success-text':'warn-text'}>{ok?'可用':'不可用 / 受限'}</strong></div>)}
       <div className="spec-row"><span>浏览器申报的视频编解码格式</span><strong>{browser.videoCodecs.length?browser.videoCodecs.join(', '):'未获得'}</strong></div>
