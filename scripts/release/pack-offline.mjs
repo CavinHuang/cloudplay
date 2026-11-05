@@ -91,6 +91,10 @@ function assembleUnsafe(opts) {
     copyTree(path.join(repo,'lib','lab'),path.join(out,'services','p0','lib','lab'));
     copyFile(path.join(repo,'lib','session-machine.mjs'),path.join(out,'services','p0','lib','session-machine.mjs'),'Session machine');
     copyTree(path.join(repo,'scripts','p0'),path.join(out,'services','p0','scripts','p0'));
+    // M2 is opt-in and never automatically started by the Windows launcher.
+    copyTree(path.join(repo,'lib','m2'),path.join(out,'services','m2','lib','m2'));
+    copyFile(path.join(repo,'lab','m2-coordinator.mjs'),path.join(out,'services','m2','lab','m2-coordinator.mjs'),'M2 private-only coordinator');
+    copyTree(path.join(repo,'scripts','m2'),path.join(out,'services','m2','scripts','m2'));
     copyTree(path.join(repo,'deploy','windows'),path.join(out,'deploy'));
     copyFile(path.join(repo,'scripts','release','verify-offline.mjs'),path.join(out,'deploy','verify-offline.mjs'),'Integrity verifier');
     copyFile(path.join(repo,'scripts','release','install-offline.mjs'),path.join(out,'deploy','install-offline.mjs'),'Offline release manager');
@@ -135,6 +139,7 @@ function assembleUnsafe(opts) {
     copyFile(path.join(repo,'docs','OFFLINE-DEPLOYMENT.md'),path.join(out,'DEPLOYMENT.md'),'Deployment instructions');
     copyFile(path.join(repo,'docs','M1-WINDOWS-GPU-ACCEPTANCE.md'),path.join(out,'M1-ACCEPTANCE.md'),'GPU host acceptance runbook');
     copyFile(path.join(repo,'docs','M1-LOCAL-QUICK-PLAY.md'),path.join(out,'LOCAL-QUICK-PLAY.md'),'Local M1 operator runbook');
+    copyFile(path.join(repo,'docs','M2-PRIVATE-CONTROL-PLANE.md'),path.join(out,'M2-CONTROL-PLANE.md'),'Private M2 admission runbook');
   }
   const sums=listFiles(out).map(f=>`${hash(f)}  ${path.relative(out,f).split(path.sep).join('/')}`).join('\n')+'\n';
   fs.writeFileSync(path.join(out,'SHA256SUMS'),sums);

@@ -1,3 +1,11 @@
+## M2 私有资源准入（单机预约原型）
+
+新增可运行的 **M2 独立控制服务**：不同管理员/主机密钥、P0 主机心跳脱敏桥接、单主机/单操作者独占占位、幂等申请与释放、自动租约过期、持久化及重启安全恢复。默认不能预约，不会启动任何游戏，也不开放公网远程串流。
+
+- 源码启动：`npm run m2:control`；已配置本机 P0 后可运行 `npm run m2:bridge`。
+- Windows full 离线安装包内可直接运行 `services/m2/scripts/m2/start-control.mjs` 与 `bridge-local-p0.mjs`，使用其内置 `runtime/node.exe`。
+- 参见 [M2 私有控制服务及安全边界](docs/M2-PRIVATE-CONTROL-PLANE.md)。公网 `/api/v1/sessions` 仍拒绝创建，真实 GPU 媒体验收仍需 Issue #3。
+
 ## M1 实机验收入口（已安装的 Windows 完整离线包）
 
 `& 'D:\CloudPlay\m1-accept.ps1' -Action Prepare -GamePath 'C:\Games\SuperTuxKart\supertuxkart.exe' -OpenBrowser`
