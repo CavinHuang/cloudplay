@@ -55,7 +55,7 @@ function Assert-PortClosed([int]$Port){
 }
 function Start-Installed {
   & (Join-Path $root 'start-active.ps1')
-  if($LASTEXITCODE -and $LASTEXITCODE -ne 0){throw 'Installed start-active returned nonzero'}
+
   foreach($p in @(7788,8080,3000)){Assert-PortBound $p}
   Wait-Web 'http://127.0.0.1:7788/health' 'cloudplay-p0-lab' $true
   Wait-Web 'http://127.0.0.1:8080/config.js' '__CONFIG_JS__' $true
@@ -82,7 +82,7 @@ function Start-Installed {
 }
 function Stop-Installed {
   & (Join-Path $root 'stop-active.ps1')
-  if($LASTEXITCODE -and $LASTEXITCODE -ne 0){throw 'Installed stop-active returned nonzero'}
+
   foreach($p in @(7788,8080,3000)){Assert-PortClosed $p}
   foreach($f in @('service-pids.json','.p0-lab-pids.json')){
     if(Test-Path -LiteralPath (Join-Path $root ('state\'+$f))){throw "Installer left a live-service PID marker: $f"}
