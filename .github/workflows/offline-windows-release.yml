@@ -9,6 +9,11 @@ on:
     paths:
       - '.github/workflows/offline-windows-release.yml'
       - 'scripts/release/**'
+      - 'deploy/windows/**'
+      - 'app/api/v1/local/**'
+      - 'lib/lab/local-*.mjs'
+      - 'components/GameDetail.jsx'
+      - 'components/PlayerView.jsx'
       - 'scripts/p0/**'
       - 'lib/lab/moonlight-toolchain.mjs'
       - 'lib/lab/m1-acceptance.mjs'
