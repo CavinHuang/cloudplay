@@ -35,6 +35,11 @@ test('packages offline Windows P0 including license + corresponding patched sour
    assert.ok(manifest.files.some(f=>f.path==='source/moonlight-web/LICENSE'));
    assert.ok(manifest.files.some(f=>f.path==='services/moonlight/static/app.js'));
    assert.ok(manifest.files.some(f=>f.path==='deploy/start-cloudplay.ps1'));
+   assert.ok(manifest.files.some(f=>f.path==='M1-ACCEPTANCE.md'));
+   assert.ok(manifest.files.some(f=>f.path==='services/p0/lib/lab/m1-acceptance.mjs'));
+   for(const name of ['m1-host-preflight.ps1','create-m1-index.mjs','verify-m1-acceptance.mjs']){
+     assert.ok(manifest.files.some(f=>f.path==='services/p0/scripts/p0/'+name));
+   }
    assert.ok(!fs.existsSync(path.join(out,'source','moonlight-web','.env.local')));
    assert.ok(!fs.existsSync(path.join(out,'source','moonlight-web','node_modules')));
    assert.deepEqual(verify(out),{mode:'windows-p0',files:manifest.files.length,networkDownloads:false});
