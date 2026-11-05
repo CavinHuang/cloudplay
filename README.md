@@ -1,3 +1,16 @@
+# CloudPlay 当前交付状态（2026-11-05）
+
+**已经真实通过：** [GitHub main 的 Windows 完整离线发行](https://github.com/CavinHuang/cloudplay/actions/runs/41817727133)（Windows 原生 Moonlight、Next.js、内置 Node、校验/安装/升级回滚）；在 [PR #4](https://github.com/CavinHuang/cloudplay/pull/4) 的 M1 开发中，新增了 GPU 主机预检、三次实机游玩证据包和 ICE 断线恢复采样，普通 CI **121 项测试及 Next.js 构建通过**。
+
+**尚未通过：** 真实 NVIDIA + Sunshine + 浏览器视频内容、可听声音、键盘/手柄输入、游戏退出回收与断线重连。GitHub-hosted Windows Runner 无 GPU，无法代替这个环节；勿将“离线安装通过”宣传为“游戏已可玩”。
+
+- [M1 Windows GPU 实机验收操作手册](docs/M1-WINDOWS-GPU-ACCEPTANCE.md)（相关命令均打包进 Windows 发行包；部署机无需下载 npm/Rust/额外源码）
+- [M1 GPU 实测问题单 #3](https://github.com/CavinHuang/cloudplay/issues/3)
+- [Windows 发行真实验收记录](docs/WINDOWS-RELEASE-ACCEPTANCE-2026-11-04.md)
+- [离线发行 GitHub Actions](https://github.com/CavinHuang/cloudplay/actions/workflows/offline-windows-release.yml)
+
+---
+
 # CloudPlay v0.12.0 — 离线一体化安装、升级与回滚
 
 > **GitHub CI 验证（2026-11-04）：** [首次真实构建](https://github.com/CavinHuang/cloudplay/actions/runs/41806874819) 已成功：依赖安装、112 项 Node 测试和 Next.js 生产构建全部通过。此结果不等于 Moonlight Web 原生构建、离线 Windows 安装包或 GPU 游戏串流已通过。
