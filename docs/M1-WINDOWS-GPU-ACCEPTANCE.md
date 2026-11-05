@@ -28,6 +28,19 @@ $evidence = 'D:\CloudPlay-M1-Evidence'
 
 可以打开 `http://127.0.0.1:7788/monitor` 查看主机报告，从游戏会话进入 `/play/<id>`。在嵌入式 Moonlight Web 中按正常流程登录、PIN 配对，选择 Sunshine 的 Desktop 流，启动和操作 SuperTuxKart。控制链路的开放端口/健康并不代表媒体流成功。
 
+## 新版播放器直接采集媒体证据（M1）
+
+本机 Quick Play 的 Player 页面 `http://127.0.0.1:3000/player/local-<session-id>` 已连接固定上游编译的 Moonlight Web WebRTC 诊断桥接。嵌入式 Moonlight Web 在真实 `RTCPeerConnection` 存在时回传**脱敏帧数、音频接收字节、ICE 状态、FPS 和候选对 RTT**，并展示在「M1 · Moonlight 真实媒体统计与证据」中。
+
+- 需要使用更新后的 Windows **完整离线发行 Artifact**；旧版已编译客户端只允许 7788 P0 父页面，无法将统计传回新 Player。
+- 只允许 `http://127.0.0.1:7788`（旧 P0）和 `http://127.0.0.1:3000`（新版 Player）两个固定父页面来源；Moonlight 子页面仍为 `http://127.0.0.1:8080`。消息要求与实际 iframe 一致的来源、会话 UUID 和每次生成的随机挑战；不支持公网代理。
+- 打开 Moonlight Web **内嵌页面**，登录、PIN 配对并连接 Sunshine **Desktop**。独立标签页可以游玩但不能向 CloudPlay Player 报告媒体统计；浏览器或 Moonlight 自身拒绝 iframe 时应使用独立标签页，并如实记录证据缺口。
+- 在当前真实会话中选择第 1、2 或 3 轮，点击「导出 cycle-N-media.json」。完成真实画面、声音、键鼠/手柄与**退出确认**后，由操作者手动勾选并导出 `cycle-N-manual.json`；另行保存经过脱敏的 `cycle-N.png`。
+- 第三轮在实际媒体流运行时执行一次真实 ICE 中断及恢复；仅在目视确认后勾选恢复项。采样不足、不连续或没捕获到断连状态时，M1 验证仍然拒绝通过。
+- 所有下载直接在本地浏览器完成；不会将 SDP、ICE candidate IP、配对记录、Token 或媒体内容传至 CloudPlay 服务。协作式客户端计数不等于独立媒体证明。
+
+`m1-index.json`、`host-preflight.json` 的生成方法仍按上一节执行。每一轮都必须创建不同的真实会话，最终使用同一套 `verify-m1-acceptance.mjs` 校验，切勿修改报告来绕过失败状态。
+
 ## 三次真实游戏会话
 
 每次从本机控制台启动一条**新的真实会话**，并保存：
