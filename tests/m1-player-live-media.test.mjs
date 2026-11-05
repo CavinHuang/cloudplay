@@ -67,7 +67,7 @@ test('Moonlight telemetry parent origin allowlist is exactly the two trusted loo
  assert.match(ts,/http:\/\/127\.0\.0\.1:7788/);
  assert.match(ts,/http:\/\/127\.0\.0\.1:3000/);
  assert.match(ts,/PARENT_ORIGINS\.has\(event\.origin\)/);
- assert.match(ts,/origin: channel\.origin/);
+ assert.match(ts,/origin: event\.origin/);
  assert.match(ts,/\}, channel\.origin\)/);
  assert.doesNotMatch(ts,/postMessage\([^\n]+['"]\*['"]\)/);
  assert.equal(LOCAL_MOONLIGHT_ORIGIN,'http://127.0.0.1:8080');
