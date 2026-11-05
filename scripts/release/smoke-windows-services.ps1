@@ -34,12 +34,13 @@ function Start-Owned([string]$Exe,[string[]]$Args,[string]$Cwd,[string]$Name){
   $processes.Add($proc)
   return $proc
 }
-function Wait-Http([string]$Url,[string]$Expected){
+function Wait-Http([string]$Url,[string]$Expected,[System.Diagnostics.Process]$Process=$null){
   for($i=0;$i -lt 55;$i++){
     try {
       $resp=Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 2
       if([int]$resp.StatusCode -eq 200 -and [string]$resp.Content -match $Expected){return $resp}
     }catch{}
+    if($Process -and $Process.HasExited){throw "Process exited before HTTP readiness at $Url (exit $($Process.ExitCode))"}
     Start-Sleep -Milliseconds 300
   }
   throw "Expected local HTTP service never became healthy: $Url"
@@ -55,8 +56,8 @@ try{
   Copy-Item -LiteralPath (Join-Path $root 'services\moonlight\static') -Destination (Join-Path $moonDir 'static') -Recurse
   $env:BIND_ADDRESS='127.0.0.1:8080'
   $moonProc=Start-Owned -Exe $moon -Args @() -Cwd $moonDir -Name 'moonlight'
-  Wait-Http 'http://127.0.0.1:8080/config.js' '__CONFIG_JS__' | Out-Null
-  Wait-Http 'http://127.0.0.1:8080/' '<!doctype html|<html' | Out-Null
+  Wait-Http 'http://127.0.0.1:8080/config.js' '__CONFIG_JS__' $moonProc | Out-Null
+  Wait-Http 'http://127.0.0.1:8080/' '<!doctype html|<html' $moonProc | Out-Null
 
   $tokenBytes=New-Object byte[] 32
   [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($tokenBytes)
@@ -68,8 +69,8 @@ try{
   $env:P0_STREAM_URL='http://127.0.0.1:8080/'
   $env:P0_SESSION_JOURNAL=Join-Path $work 'journal.json'
   $coordinator=Start-Owned -Exe $node -Args @('lab/coordinator.mjs') -Cwd $p0 -Name 'coordinator'
-  Wait-Http 'http://127.0.0.1:7788/health' 'cloudplay-p0-lab' | Out-Null
-  Wait-Http 'http://127.0.0.1:7788/monitor' 'html' | Out-Null
+  Wait-Http 'http://127.0.0.1:7788/health' 'cloudplay-p0-lab' $coordinator | Out-Null
+  Wait-Http 'http://127.0.0.1:7788/monitor' 'html' $coordinator | Out-Null
   $agent=Start-Owned -Exe $node -Args @('lab/agent.mjs') -Cwd $p0 -Name 'agent'
   $hostSeen=$false
   for($i=0;$i -lt 55;$i++){
@@ -94,7 +95,7 @@ try{
   if(!$SkipWeb -and (Test-Path -LiteralPath (Join-Path $web 'server.js'))){
     $env:NODE_ENV='production';$env:PORT='3000';$env:HOSTNAME='127.0.0.1'
     $webProc=Start-Owned -Exe $node -Args @('server.js') -Cwd $web -Name 'web'
-    Wait-Http 'http://127.0.0.1:3000/api/v1/health' '"status":"ok"' | Out-Null
+    Wait-Http 'http://127.0.0.1:3000/api/v1/health' '"status":"ok"' $webProc | Out-Null
   }
   $ports=if($SkipWeb){@(7788,8080)}else{@(7788,8080,3000)}
   foreach($port in $ports){
@@ -112,5 +113,17 @@ try{
   }
   foreach($key in $original.Keys){[Environment]::SetEnvironmentVariable($key,$original[$key],'Process')}
   if($passed){Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue}
-  else{Write-Warning 'Service smoke failed; private process logs were retained locally. Do not upload them publicly.'}
+  else{
+    foreach($kind in @('moonlight','coordinator','agent','web')){
+      $err=Join-Path $work ($kind+'.err.log')
+      if(Test-Path -LiteralPath $err){
+        $log=[IO.File]::ReadAllText($err)
+        $codes=@('ERR_MODULE_NOT_FOUND','ERR_INVALID_PACKAGE_CONFIG','MODULE_NOT_FOUND','ENOENT','EADDRINUSE','EACCES','SyntaxError','TypeError','ReferenceError','Error:')
+        $found=@($codes|Where-Object {$log.Contains($_)})
+        if($found.Count){Write-Warning ("Service "+$kind+" failure classes: "+($found -join ', '))}
+        else{Write-Warning ("Service "+$kind+" stderr bytes: "+$log.Length)}
+      }
+    }
+    Write-Warning 'Service smoke failed; private process logs retained only in ephemeral CI runner.'
+  }
 }
