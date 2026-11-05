@@ -63,7 +63,7 @@ async function run(){
   assert.equal(hb.status,202);
   await startWeb('1');
   const status=await ask('/api/v1/local/status');
-  assert.equal(status.status,200);
+  if(status.status!==200){const rejected=await status.json();throw Error('Local status rejected HTTP '+status.status+' ('+(rejected.code||'no-code')+')');}
   const state=await status.json();
   assert.equal(state.localLaunchEnabled,true);
   assert.equal(state.hosts[0].infrastructureReady,false);
