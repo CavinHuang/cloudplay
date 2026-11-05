@@ -11,7 +11,7 @@
 #>
 [CmdletBinding()]
 param(
-  [ValidateSet('Prepare','Check','Review')][string]$Action='Prepare',
+  [ValidateSet('Prepare','Check','Review','Rebaseline')][string]$Action='Prepare',
   [string]$GamePath='',
   [string]$EvidenceDir='',
   [switch]$OpenBrowser
@@ -45,6 +45,48 @@ if($evidence -eq $release -or
   throw 'M1_EVIDENCE_MUST_BE_OUTSIDE_IMMUTABLE_RELEASE'
 }
 $index=Join-Path $evidence 'm1-index.json'
+if($Action -eq 'Rebaseline'){
+  if(!(Test-Path -LiteralPath $index -PathType Leaf)){throw 'M1_INDEX_NOT_FOUND: run Prepare first.'}
+  $initial=Join-Path $evidence 'host-preflight.json'
+  if(!(Test-Path -LiteralPath $initial -PathType Leaf)){throw 'M1_BASELINE_NOT_FOUND'}
+  # A rebaseline is ONLY allowed before any media, witness, screenshot, or
+  # review artifact exists. Never allow rebaselining completed/partial sessions.
+  foreach($cycle in 1..3){
+    foreach($filename in @("cycle-$cycle-media.json","cycle-$cycle-manual.json","cycle-$cycle.png","cycle-$cycle.jpg","cycle-$cycle.jpeg","cycle-$cycle.webp")){
+      $artifact=Join-Path $evidence $filename
+      if(Test-Path -LiteralPath $artifact){throw 'M1_REBASELINE_LOCKED_BY_CYCLE_EVIDENCE'}
+    }
+  }
+  if(Test-Path -LiteralPath (Join-Path $evidence 'review-result.json')){throw 'M1_REBASELINE_LOCKED_BY_REVIEW'}
+  if(!$GamePath -or ![IO.Path]::IsPathRooted($GamePath) -or
+     [IO.Path]::GetFileName($GamePath) -ine 'supertuxkart.exe' -or
+     !(Test-Path -LiteralPath $GamePath -PathType Leaf)){
+    throw 'M1_GAME_PATH_REQUIRED: specify the absolute path to installed supertuxkart.exe.'
+  }
+  $preflight=Join-Path $release 'services\p0\scripts\p0\m1-host-preflight.ps1'
+  if(!(Test-Path -LiteralPath $preflight -PathType Leaf)){throw 'M1_PREFLIGHT_MISSING'}
+  $temporary=Join-Path $evidence 'host-preflight-candidate.json'
+  if(Test-Path -LiteralPath $temporary){throw 'M1_BASELINE_CANDIDATE_EXISTS'}
+  try {
+    & $preflight -GamePath $GamePath -StateRoot (Join-Path $root 'state') -OutFile $temporary -ReportOnly
+    if($LASTEXITCODE -and $LASTEXITCODE -ne 0){throw 'M1_PREFLIGHT_TOOL_FAILED'}
+    $candidate=Get-Content -LiteralPath $temporary -Raw | ConvertFrom-Json
+    if($candidate.kind -ne 'cloudplay-m1-host-preflight' -or $candidate.schemaVersion -ne 1 -or $candidate.ready -ne $true -or
+       @($candidate.checks.PSObject.Properties | Where-Object {$_.Value -ne $true}).Count -gt 0){
+      throw 'M1_REBASELINE_NOT_READY: fix all actual host checks first; baseline unchanged.'
+    }
+    $original=Get-Content -LiteralPath $initial -Raw | ConvertFrom-Json
+    if($original.kind -ne 'cloudplay-m1-host-preflight' -or $original.schemaVersion -ne 1){throw 'M1_BASELINE_INVALID'}
+    $archive=Join-Path $evidence ('host-preflight-previous-'+([DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfff'))+'.json')
+    [IO.File]::Copy($initial,$archive,$false)
+    [IO.File]::Copy($temporary,$initial,$true)
+    Write-Host 'M1 baseline replaced only after all new live host checks passed; previous boolean-only baseline archived.'
+    Write-Host "Archived previous baseline: $archive"
+  }finally{
+    if(Test-Path -LiteralPath $temporary){Remove-Item -LiteralPath $temporary -Force}
+  }
+  return
+}
 if($Action -eq 'Review'){
   if(!(Test-Path -LiteralPath $index -PathType Leaf)){throw 'M1_INDEX_NOT_FOUND: run Prepare first.'}
   $checkScript=Join-Path $release 'services\p0\scripts\p0\verify-m1-acceptance.mjs'

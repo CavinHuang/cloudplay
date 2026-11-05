@@ -102,6 +102,27 @@ try {
   if($pre.ready -ne $false -or $pre.checks.nvidiaGpuDetected -ne $false){
     throw 'GPU-less M1 preflight incorrectly reported ready'
   }
+  # A failed initial preflight may be refreshed only when the host is genuinely
+  # ready and no media/witness evidence exists. A CI runner has no GPU and
+  # must never rebaseline itself into an apparently passing M1 host.
+  $beforeDenied=Get-Content -LiteralPath $firstReport -Raw
+  $rebaselineDenied=$false
+  try{
+    & (Join-Path $root 'm1-accept.ps1') -Action Rebaseline -GamePath $fixture -EvidenceDir $evidence | Out-Host
+  }catch{$rebaselineDenied=$true}
+  if(!$rebaselineDenied){throw 'M1 Rebaseline accepted a GPU-less host'}
+  $afterDenied=Get-Content -LiteralPath $firstReport -Raw
+  if($afterDenied -ne $beforeDenied -or
+     @((Get-ChildItem $evidence -Filter 'host-preflight-previous-*.json' -ErrorAction SilentlyContinue)).Count -gt 0){
+    throw 'M1 rebaseline modified initial evidence on failure'
+  }
+  [IO.File]::WriteAllText((Join-Path $evidence 'cycle-1-media.json'),'{}')
+  $locked=$false
+  try{
+    & (Join-Path $root 'm1-accept.ps1') -Action Rebaseline -GamePath $fixture -EvidenceDir $evidence | Out-Host
+  }catch{$locked=($_.Exception.Message -match 'M1_REBASELINE_LOCKED_BY_CYCLE_EVIDENCE')}
+  if(!$locked){throw 'M1 Rebaseline failed to lock after cycle evidence appeared'}
+  Remove-Item -LiteralPath (Join-Path $evidence 'cycle-1-media.json') -Force
   & (Join-Path $root 'm1-accept.ps1') -Action Check -GamePath $fixture -EvidenceDir $evidence | Out-Host
   if(!(Test-Path -LiteralPath (Join-Path $evidence 'host-check-latest.json'))){
     throw 'M1 Check did not write a separate current host snapshot'
