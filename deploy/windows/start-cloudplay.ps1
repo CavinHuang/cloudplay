@@ -29,6 +29,7 @@ $env:CLOUDPLAY_STATE_DIR=$stateRoot
 $game=Join-Path $root 'games\supertuxkart\supertuxkart.exe'
 if(!$GamePath -and (Test-Path $game)){$GamePath=$game}
 if($EnableLocalLaunch -and (!$GamePath -or !(Test-Path $GamePath))){throw 'Game executable missing. Specify -GamePath pointing to an installed, licensed SuperTuxKart.'}
+if($EnableLocalLaunch -and [IO.Path]::GetFileName($GamePath) -ine 'supertuxkart.exe'){throw 'Local M1 launching only accepts the SuperTuxKart executable.'}
 $existing=@(7788,8080)
 if(!$SkipWeb -and $info.mode -eq 'windows-full'){$existing+=3000}
 foreach($port in $existing){
@@ -99,6 +100,8 @@ try {
     $env:PORT='3000'
     $env:HOSTNAME='127.0.0.1'
     $env:CLOUDPLAY_P0_UI_ENABLED='0'  # production P0 lab APIs remain disabled
+    # Explicit local-only operator bridge; browser never learns P0 auth token.
+    $env:CLOUDPLAY_LOCAL_OPERATOR_ENABLED=$(if($EnableLocalLaunch){'1'}else{'0'})
     $webProc=Start-Process -FilePath $node -ArgumentList @('server.js') -WorkingDirectory $webDir -PassThru -RedirectStandardOutput (Join-Path $logRoot 'web.out.log') -RedirectStandardError (Join-Path $logRoot 'web.err.log')
     $processList.web=$webProc.Id
     $webReady=$false
