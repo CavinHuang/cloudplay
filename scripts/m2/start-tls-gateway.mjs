@@ -6,6 +6,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {createM2TlsGateway,isPrivateGatewayAddress} from '../../lib/m2/tls-host-gateway.mjs';
 
 export function readM2TlsFile(filename){
@@ -16,7 +17,7 @@ export function readM2TlsFile(filename){
  return fs.readFileSync(filename);
 }
 
-if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(new URL(import.meta.url).pathname)){
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  try{
   if(process.env.CLOUDPLAY_M2_TLS_GATEWAY_ENABLE!=='1')
    throw Error('M2_TLS_GATEWAY_EXPLICIT_OPT_IN_REQUIRED');
