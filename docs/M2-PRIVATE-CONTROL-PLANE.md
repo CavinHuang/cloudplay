@@ -48,7 +48,7 @@ All private routes require `Authorization: Bearer <token>`; writes additionally 
 | `POST /internal/m2/reservations` | Admin secret | `{"ownerId":"operator01","gameId":"supertuxkart","idempotencyKey":"request_0001"}` |
 | `DELETE /internal/m2/reservations/{uuid}` | Admin secret | `{"ownerId":"operator01"}`; matching owner required |
 
-An eligible host is one with a fresh (16-second) signed-by-its-key heartbeat declaring all prerequisites, no running game and no drain, with no existing reservation. These are not verified GPU proofs. Capacity is **one per host and one per owner**, never a fabricated multi-GPU number. Reservation TTL defaults to 120 seconds. Retries with the same owner/idempotency key return the same active reservation; after release or expiry, the same key cannot silently book another host. A corrupted journal blocks startup. On coordinator restart, all old reservations become `expired` and fresh host heartbeats are required. Only accepted reservations are written to a private atomic JSON journal; no secret is persisted.
+An eligible host is one with a fresh (16-second) signed-by-its-key heartbeat declaring all prerequisites, no running game and no drain, with no existing reservation. These are not verified GPU proofs. Capacity is **one per host and one per owner**, never a fabricated multi-GPU number. Reservation TTL defaults to 120 seconds, with fenced refresh in the final half and a hard 10-minute lifetime. Retries with the same owner/idempotency key return the same active reservation; after release or expiry, the same key cannot silently book another host. A corrupted journal blocks startup. On coordinator restart, all old reservations become `expired` and fresh host heartbeats are required. Only accepted reservations are written to a private atomic JSON journal; no secret is persisted.
 
 ## M2 registered host credentials and owner-bound private reservations
 
@@ -64,6 +64,7 @@ The private operator can now enroll new hosts and reservation owners using the *
 | `GET /internal/m2/identities` | Admin | List host/owner IDs and creation timestamps, never secrets |
 | `GET /internal/m2/owners/{id}/reservations` | Matching owner token or admin | Only that owner's reservation metadata |
 | `POST /internal/m2/reservations` | Matching owner token or admin | Exclusive host capacity reservation with matching `ownerId` |
+| `POST /internal/m2/reservations/{uuid}/renew` | Matching owner token or admin | `{"ownerId":"operator01","expectedExpiresAt":<current UNIX timestamp in milliseconds>}`; compare-and-swap lease extension |
 | `DELETE /internal/m2/reservations/{uuid}` | Matching owner token or admin | Release with matching `ownerId` |
 
 **Example (PowerShell, trusted operator machine only):** With the M2 service already running, set `$admin` securely to `CLOUDPLAY_M2_ADMIN_TOKEN`, then enroll identities:
@@ -81,6 +82,23 @@ $ownerKey = Invoke-RestMethod -Uri "$base/internal/m2/owners" -Method Post -Head
 Each `token` is a new random 256-bit secret, returned **once** on enrollment/rotation. Only its SHA-256 digest is stored in the separately persisted `m2-identities.json` under `CLOUDPLAY_M2_STATE_DIR` (outside the immutable release; restrictive file permissions). The admin credential and plaintext host/owner secrets are not written to this journal. Corruption or unsafe symlinks fail closed at startup. Keep both `m2-journal.json` and `m2-identities.json` private and protected by filesystem ACLs.
 
 Registered host keys can send only their own host heartbeat. Registered owner keys can reserve/release/read **only their own** capacity; they cannot read global status, manage hosts or act as another owner. The admin key remains an explicit, trusted operator override. A rotated or revoked key immediately loses authorization; associated reservations expire and host capacity requires a fresh authenticated heartbeat. On restart, prior reservations expire regardless of whether identities persist. **Enrollment here is private operator registration, NOT internet-facing host authentication or public customer signup.**
+
+## Fenced reservation lifecycle (no game process launched)
+
+Each reservation is initially a **120-second capacity lease**, not a game session. A registered owner (or trusted local administrator) can extend it through `POST /internal/m2/reservations/{uuid}/renew` with the exact `expiresAt` from the latest reservation result and the matching `ownerId`. A successful renewal returns the new `expiresAt`; the previous timestamp can **never** be replayed to renew the same lease again. The mutation requires `X-CloudPlay-M2-Action: 1` and a valid bearer credential, like all other state-changing operations.
+
+Renewal is rejected when the reservation has expired/released/revoked, the host heartbeat is over 16 seconds old, the reported host is draining/busy or no longer meets local readiness, the request is too early (more than halfway before expiry), or the lease has reached its **10-minute maximum lifetime measured from initial creation**. Stale `expectedExpiresAt` returns `LEASE_FENCE_CONFLICT` (409); missing/unready host returns `HOST_NOT_READY_FOR_RENEWAL` (409). Journal write errors return 503 and preserve the previous lease timestamp. After expiry the same idempotency key remains finalized; a fresh request must use a new key and a newly eligible host heartbeat.
+
+Example using a previously returned `$reservation` and privately configured `$ownerToken`:
+
+```powershell
+$headers = @{ Authorization = "Bearer $ownerToken"; 'X-CloudPlay-M2-Action' = '1' }
+$renewBody = @{ ownerId = $reservation.ownerId; expectedExpiresAt = $reservation.expiresAt } | ConvertTo-Json
+$renewed = Invoke-RestMethod -Uri "http://127.0.0.1:7790/internal/m2/reservations/$($reservation.id)/renew" -Method Post -Headers $headers -ContentType 'application/json' -Body $renewBody
+$reservation = $renewed.reservation
+```
+
+Do not renew leases on a timer without checking real host readiness; the control plane checks the **self-reported** boolean heartbeat, not independent proof of GPU or streaming. A lease does not authorize launching a process, connecting Sunshine or opening an external listener.
 
 ## Hard safety and next milestone
 
