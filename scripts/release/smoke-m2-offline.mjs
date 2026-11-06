@@ -157,6 +157,29 @@ async function main(){
   assert.equal(ownerBooking.status,201);
   const ownerTicket=(await ownerBooking.json()).reservation;
   assert.equal(ownerTicket.hostId,'newOfflineHost');
+  assert.equal((await request('POST',syncPath,hostToken,
+   {connectionId:nextId,sequence:2})).status,401);
+  const assignedSync=await request('POST',syncPath,enrolledHostToken,
+   {connectionId:nextId,sequence:2});
+  assert.equal(assignedSync.status,200);
+  const observed=await assignedSync.json();
+  assert.equal(observed.action,'OBSERVE_RESERVATION');
+  assert.deepEqual(observed.assignment,{
+   reservationId:ownerTicket.id,gameId:'supertuxkart',expiresAt:ownerTicket.expiresAt
+  });
+  assert.equal(JSON.stringify(observed).includes('offlineOwner'),false);
+  const ackBody={connectionId:nextId,sequence:3,
+   reservationId:ownerTicket.id,expiresAt:ownerTicket.expiresAt};
+  assert.equal((await request('POST',ackPath,enrolledHostToken,
+   {...ackBody,expiresAt:ownerTicket.expiresAt+1})).status,409);
+  assert.equal((await request('POST',ackPath,enrolledHostToken,ackBody)).status,202);
+  assert.equal((await request('POST',ackPath,enrolledHostToken,ackBody)).status,409);
+  const synced=await request('POST',syncPath,enrolledHostToken,
+   {connectionId:nextId,sequence:4});
+  assert.equal(synced.status,200);
+  assert.equal((await synced.json()).acknowledged,true);
+  assert.equal((await request('POST',syncPath,enrolledHostToken,
+   {connectionId:firstId,sequence:5})).status,409);
   assert.equal((await request('POST',renewRoute,enrolledOwnerToken,fence)).status,401); // cross-owner
   const ownRenewRoute='/internal/m2/reservations/'+ownerTicket.id+'/renew';
   const ownFence={ownerId:'offlineOwner',expectedExpiresAt:ownerTicket.expiresAt};
