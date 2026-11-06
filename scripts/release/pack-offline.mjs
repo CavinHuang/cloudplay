@@ -141,6 +141,7 @@ function assembleUnsafe(opts) {
     copyFile(path.join(repo,'docs','M1-WINDOWS-GPU-ACCEPTANCE.md'),path.join(out,'M1-ACCEPTANCE.md'),'GPU host acceptance runbook');
     copyFile(path.join(repo,'docs','M1-LOCAL-QUICK-PLAY.md'),path.join(out,'LOCAL-QUICK-PLAY.md'),'Local M1 operator runbook');
     copyFile(path.join(repo,'docs','M2-PRIVATE-CONTROL-PLANE.md'),path.join(out,'M2-CONTROL-PLANE.md'),'Private M2 admission runbook');
+    copyFile(path.join(repo,'docs','M2-PRIVATE-MTLS-GATEWAY.md'),path.join(out,'M2-TLS-GATEWAY.md'),'Private mTLS host gateway deployment runbook');
   }
   const sums=listFiles(out).map(f=>`${hash(f)}  ${path.relative(out,f).split(path.sep).join('/')}`).join('\n')+'\n';
   fs.writeFileSync(path.join(out,'SHA256SUMS'),sums);
