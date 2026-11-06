@@ -128,6 +128,17 @@ export function createM2Coordinator({adminToken,hostTokens={},enabledGames=[],st
     const reply=admission.reserve(body);return json(res,reply.status,reply);
    }catch(e){return json(res,e.status||400,{code:e.code||'INVALID_BODY'})}
   }
+  const renewMatch=/^\/internal\/m2\/reservations\/([0-9a-f-]{36})\/renew$/i.exec(pathname||'');
+  if(renewMatch){
+   if(req.method!=='POST')return json(res,405,{code:'METHOD_NOT_ALLOWED'});
+   if(req.headers['x-cloudplay-m2-action']!=='1')return json(res,403,{code:'ACTION_HEADER_REQUIRED'});
+   try{
+    const body=await readJson(req);
+    if(!isAdmin&&!identities.authenticate('owner',body?.ownerId,supplied))return json(res,401,{code:'UNAUTHORIZED'});
+    const reply=admission.renew(renewMatch[1],body);
+    return json(res,reply.status,reply);
+   }catch(e){return json(res,e.status||400,{code:e.code||'INVALID_BODY'})}
+  }
   const releaseMatch=/^\/internal\/m2\/reservations\/([0-9a-f-]{36})$/i.exec(pathname||'');
   if(req.method==='DELETE'&&releaseMatch){
    if(req.headers['x-cloudplay-m2-action']!=='1')return json(res,403,{code:'ACTION_HEADER_REQUIRED'});

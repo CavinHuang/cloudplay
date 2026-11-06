@@ -101,6 +101,11 @@ async function main(){
   const ticket=(await booking.json()).reservation;
   assert.equal(ticket.ownerId,'local-operator');
   assert.equal(ticket.hostId,hostId);
+  const renewRoute='/internal/m2/reservations/'+ticket.id+'/renew';
+  const fence={ownerId:'local-operator',expectedExpiresAt:ticket.expiresAt};
+  assert.equal((await request('POST',renewRoute,hostToken,fence)).status,401);
+  assert.equal((await request('POST',renewRoute,admin,fence,{'Origin':'https://outside.example'})).status,403);
+  assert.equal((await request('POST',renewRoute,admin,fence)).status,409); // too early; no fabricated passage of time
   assert.equal((await request('POST','/internal/m2/reservations',admin,reservation)).status,200);
   assert.equal((await request('POST','/internal/m2/reservations',admin,
    {...reservation,ownerId:'another-owner',idempotencyKey:'offline-smoke-00002'})).status,409);
@@ -122,6 +127,10 @@ async function main(){
   assert.equal(ownerBooking.status,201);
   const ownerTicket=(await ownerBooking.json()).reservation;
   assert.equal(ownerTicket.hostId,'newOfflineHost');
+  assert.equal((await request('POST',renewRoute,enrolledOwnerToken,fence)).status,401); // cross-owner
+  const ownRenewRoute='/internal/m2/reservations/'+ownerTicket.id+'/renew';
+  const ownFence={ownerId:'offlineOwner',expectedExpiresAt:ownerTicket.expiresAt};
+  assert.equal((await request('POST',ownRenewRoute,enrolledOwnerToken,ownFence)).status,409); // too early
   assert.equal((await request('GET','/internal/m2/status',enrolledOwnerToken)).status,401);
   const rotated=await request('POST','/internal/m2/hosts/newOfflineHost/rotate',admin);
   assert.equal(rotated.status,200);
@@ -148,7 +157,7 @@ async function main(){
   assert.equal((await request('POST','/internal/m2/hosts/'+hostId+'/heartbeat',hostToken,good)).status,202);
   assert.equal((await request('POST','/internal/m2/reservations',admin,
    {...reservation,idempotencyKey:'offline-smoke-00003'})).status,403);
-  console.log('PASS: packaged M2 Node service, loopback HTTP, token/Origin/proxy denial, no-GPU refusal, capacity exclusivity, journal restart expiry and default-off policy.');
+  console.log('PASS: packaged M2 Node service, owner credential boundaries, early lease refusal, loopback HTTP, token/Origin/proxy denial, no-GPU refusal, capacity exclusivity, journal restart expiry and default-off policy.');
   console.log('NOT CHECKED: actual physical GPU, real game process, remote networking or video/audio/input.');
  }finally{
   try{await stop()}finally{fs.rmSync(temp,{recursive:true,force:true})}
