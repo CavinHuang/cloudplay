@@ -9,6 +9,7 @@ import {randomUUID,timingSafeEqual} from 'node:crypto';
 import {createAdmissionManager} from '../lib/m2/admission.mjs';
 import {createIdentityRegistry} from '../lib/m2/identities.mjs';
 import {createHostConnections} from '../lib/m2/host-connections.mjs';
+import {createHostSync} from '../lib/m2/host-sync.mjs';
 const HOST_ID=/^[A-Za-z0-9_-]{3,64}$/;
 const PRIVATE_HEADERS={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'};
 const tokenOk=(provided,expected)=>{
@@ -55,11 +56,16 @@ export function createM2Coordinator({adminToken,hostTokens={},enabledGames=[],st
   const journal=readJournal(statePath);
   if(journal)admission.restore(journal);
  }
- const connections=createHostConnections({onConnect:hostId=>admission.invalidateIdentity('host',hostId,'HOST_CONNECTION_REPLACED')});
+ let hostSync;
+ const connections=createHostConnections({onConnect:hostId=>{
+  admission.invalidateIdentity('host',hostId,'HOST_CONNECTION_REPLACED');
+  hostSync?.forget(hostId);
+ }});
+ hostSync=createHostSync({admission,connections,clock});
  const identities=createIdentityRegistry({
   statePath:statePath?path.join(path.dirname(statePath),'m2-identities.json'):null,
   legacyHostTokens:hostTokens,clock,
-  onDisable:(kind,id,reason)=>{admission.invalidateIdentity(kind,id,reason);if(kind==='host')connections.forget(id);}
+  onDisable:(kind,id,reason)=>{admission.invalidateIdentity(kind,id,reason);if(kind==='host'){connections.forget(id);hostSync.forget(id);}}
  });
  const server=http.createServer(async(req,res)=>{
   if(req.socket.remoteAddress!=='127.0.0.1'&&req.socket.remoteAddress!=='::1')return json(res,403,{code:'LOOPBACK_ONLY'});
@@ -83,6 +89,19 @@ export function createM2Coordinator({adminToken,hostTokens={},enabledGames=[],st
     const body=await readJson(req);
     if(!identities.authenticate('host',connectMatch[1],supplied))return json(res,401,{code:'UNAUTHORIZED'});
     const reply=connections.connect(connectMatch[1],body);
+    return json(res,reply.status,reply);
+   }catch(e){return json(res,e.status||400,{code:e.code||'INVALID_BODY'})}
+  }
+  // Host-initiated pull/ack is strictly an observation of durable reservation
+  // metadata. It cannot dispatch an executable command or stream URL.
+  const syncMatch=/^\/internal\/m2\/hosts\/([A-Za-z0-9_-]{3,64})\/(sync|ack)$/.exec(pathname||'');
+  if(syncMatch){
+   if(req.method!=='POST')return json(res,405,{code:'METHOD_NOT_ALLOWED'});
+   if(req.headers['x-cloudplay-m2-action']!=='1')return json(res,403,{code:'ACTION_HEADER_REQUIRED'});
+   try{
+    const body=await readJson(req);
+    if(!identities.authenticate('host',syncMatch[1],supplied))return json(res,401,{code:'UNAUTHORIZED'});
+    const reply=syncMatch[2]==='sync'?hostSync.pull(syncMatch[1],body):hostSync.ack(syncMatch[1],body);
     return json(res,reply.status,reply);
    }catch(e){return json(res,e.status||400,{code:e.code||'INVALID_BODY'})}
   }
@@ -170,5 +189,5 @@ export function createM2Coordinator({adminToken,hostTokens={},enabledGames=[],st
   if(!isAdmin)return json(res,401,{code:'UNAUTHORIZED'});
   return json(res,404,{code:'M2_ROUTE_NOT_FOUND'});
  });
- return {server,admission,identities,connections};
+ return {server,admission,identities,connections,hostSync};
 }

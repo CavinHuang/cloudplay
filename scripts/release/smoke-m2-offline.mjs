@@ -138,12 +138,48 @@ async function main(){
    {...good,connectionId:firstId,sequence:2})).status,409);
   assert.equal((await request('POST','/internal/m2/hosts/newOfflineHost/heartbeat',enrolledHostToken,
    {...good,connectionId:nextId,sequence:1})).status,202);
+  // A connected host can pull its OWN observation-only capacity snapshot.
+  // Before booking there must be no assignment, even for a healthy host.
+  const syncPath='/internal/m2/hosts/newOfflineHost/sync';
+  const ackPath='/internal/m2/hosts/newOfflineHost/ack';
+  const initialSync=await request('POST',syncPath,enrolledHostToken,
+   {connectionId:nextId,sequence:1});
+  assert.equal(initialSync.status,200);
+  const initiallyIdle=await initialSync.json();
+  assert.equal(initiallyIdle.action,'CAPACITY_IDLE');
+  assert.equal(initiallyIdle.assignment,null);
+  assert.equal(initiallyIdle.gameLaunchEnabled,false);
+  assert.equal((await request('POST',syncPath,enrolledHostToken,
+   {connectionId:nextId,sequence:1})).status,409);
   const ownerRequest={ownerId:'offlineOwner',gameId:'supertuxkart',idempotencyKey:'offline-owner-0001'};
   assert.equal((await request('POST','/internal/m2/reservations',hostToken,ownerRequest)).status,401);
   const ownerBooking=await request('POST','/internal/m2/reservations',enrolledOwnerToken,ownerRequest);
   assert.equal(ownerBooking.status,201);
   const ownerTicket=(await ownerBooking.json()).reservation;
   assert.equal(ownerTicket.hostId,'newOfflineHost');
+  assert.equal((await request('POST',syncPath,hostToken,
+   {connectionId:nextId,sequence:2})).status,401);
+  const assignedSync=await request('POST',syncPath,enrolledHostToken,
+   {connectionId:nextId,sequence:2});
+  assert.equal(assignedSync.status,200);
+  const observed=await assignedSync.json();
+  assert.equal(observed.action,'OBSERVE_RESERVATION');
+  assert.deepEqual(observed.assignment,{
+   reservationId:ownerTicket.id,gameId:'supertuxkart',expiresAt:ownerTicket.expiresAt
+  });
+  assert.equal(JSON.stringify(observed).includes('offlineOwner'),false);
+  const ackBody={connectionId:nextId,sequence:3,
+   reservationId:ownerTicket.id,expiresAt:ownerTicket.expiresAt};
+  assert.equal((await request('POST',ackPath,enrolledHostToken,
+   {...ackBody,expiresAt:ownerTicket.expiresAt+1})).status,409);
+  assert.equal((await request('POST',ackPath,enrolledHostToken,ackBody)).status,202);
+  assert.equal((await request('POST',ackPath,enrolledHostToken,ackBody)).status,409);
+  const synced=await request('POST',syncPath,enrolledHostToken,
+   {connectionId:nextId,sequence:4});
+  assert.equal(synced.status,200);
+  assert.equal((await synced.json()).acknowledged,true);
+  assert.equal((await request('POST',syncPath,enrolledHostToken,
+   {connectionId:firstId,sequence:5})).status,409);
   assert.equal((await request('POST',renewRoute,enrolledOwnerToken,fence)).status,401); // cross-owner
   const ownRenewRoute='/internal/m2/reservations/'+ownerTicket.id+'/renew';
   const ownFence={ownerId:'offlineOwner',expectedExpiresAt:ownerTicket.expiresAt};

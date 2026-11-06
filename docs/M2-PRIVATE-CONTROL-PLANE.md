@@ -45,6 +45,8 @@ All private routes require `Authorization: Bearer <token>`; writes additionally 
 | `GET /health` | None | Loopback process status only; stream and launch explicitly off |
 | `POST /internal/m2/hosts/{hostId}/connect` | Matching host secret | Start a new ephemeral host-process generation; body `{\"protocol\":\"cloudplay.m2.host-connection.v1\"}` |
 | `POST /internal/m2/hosts/{hostId}/heartbeat` | Matching host secret | Registered hosts: six booleans plus the active `connectionId` and strictly increasing integer `sequence`; legacy env hosts may still report only six booleans until opting in |
+| `POST /internal/m2/hosts/{hostId}/sync` | Matching host secret | Current-process pull of only the host's active reservation metadata (or idle state) |
+| `POST /internal/m2/hosts/{hostId}/ack` | Matching host secret | Confirm observation of that exact reservation ID and expiry, without starting anything |
 | `GET /internal/m2/status` | Admin secret | Private host freshness, reservation and occupancy |
 | `POST /internal/m2/reservations` | Admin secret | `{"ownerId":"operator01","gameId":"supertuxkart","idempotencyKey":"request_0001"}` |
 | `DELETE /internal/m2/reservations/{uuid}` | Admin secret | `{"ownerId":"operator01"}`; matching owner required |
@@ -95,6 +97,21 @@ Registered M2 host keys now identify a host, but **a process must also establish
 5. The old bridge treats a fenced/replayed generation as terminal and must be **explicitly restarted**, rather than automatically reconnecting and fighting the new process for host ownership. A control-plane restart also discards every in-memory connection and every old host claim, so any surviving bridge must restart to establish a new generation.
 
 **Compatibility:** Existing hosts provisioned solely by `CLOUDPLAY_M2_HOST_TOKENS` may still post the original six-boolean heartbeat until they explicitly start using `/connect`; once a connection generation is active, old-format heartbeats are rejected for that process lifetime. **Newly enrolled hosts require the connection step**. Host tokens remain operator-managed local credentials, and a valid *stolen* host token could register a newer process generation. This protocol prevents stale instances and accidental replay, **not** bearer credential theft, network interception, secure remote transport, or fraudulent GPU self-reports. Do not expose these routes on a public listener or reverse proxy.
+
+## Host-initiated reservation synchronization (observation-only)
+
+The private Host Bridge now performs a pull **after** each authenticated heartbeat. The controller does not push commands to hosts and does not create network sockets outside the existing localhost control plane. This is the application-level protocol to be carried by a separately authenticated and encrypted private transport in a future stage; **it is not yet a cross-machine deployment**.
+
+| Endpoint | Host body and authorization | Result |
+|---|---|---|
+| `POST /internal/m2/hosts/{hostId}/sync` | Matching host Bearer token, `{"connectionId":"<current-UUID>","sequence":1}` | `CAPACITY_IDLE` or `OBSERVE_RESERVATION`; only `reservationId`, fixed `gameId` and `expiresAt` |
+| `POST /internal/m2/hosts/{hostId}/ack` | Matching host token, `{"connectionId":"<current-UUID>","sequence":2,"reservationId":"<current-UUID>","expiresAt":<current-ms>}` | `202` acknowledging **receipt of metadata only**, never gameplay readiness or launch permission |
+
+The sync cursor is independent of the readiness heartbeat cursor but strictly increases across both pull and ack requests. A duplicate or earlier sequence is rejected as `HOST_SYNC_REPLAYED`; using the old connection generation is rejected as `HOST_CONNECTION_FENCED`. A confirmation for a different host's reservation, a finalized ticket, or an outdated expiry is rejected as `HOST_ASSIGNMENT_STALE`. The host cannot see reservation owners, other hosts' assignments, credentials, paths, network endpoints or executable instructions. The response always explicitly carries `gameLaunchEnabled:false` and `streamVerified:false`.
+
+Host acknowledgments are **ephemeral observations**, not a second source of authority: the existing private reservation journal remains definitive. A lease extension changes its `expiresAt`, so the host must observe and acknowledge the new snapshot; release/expiry changes the next response to `CAPACITY_IDLE`. A new host process generation clears previous observations and invalidates any former reservation, and a controller restart discards all observations and requires a fresh connection. The bridge automatically handles this while running with `--watch`, without executing any command.
+
+This is **not** remote command execution, Sunshine pairing, remote network transport, an allocation guarantee, or proof of video/audio/input. Never expose the loopback API via an HTTP proxy or tunnel; future private cross-machine connectivity requires an independently validated secure channel and host credentials.
 
 ## Fenced reservation lifecycle (no game process launched)
 
