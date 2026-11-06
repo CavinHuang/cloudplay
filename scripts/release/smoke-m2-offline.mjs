@@ -140,10 +140,11 @@ async function main(){
   assert.equal(statusReply.status,200);
   const status=await statusReply.json();
   assert.equal(status.hosts.length,0);
-  assert.equal(status.reservations.length,1);
-  assert.equal(status.reservations[0].id,ticket.id);
-  assert.equal(status.reservations[0].state,'expired');
-  assert.equal(status.reservations[0].reason,'CONTROL_PLANE_RESTART');
+  assert.equal(status.reservations.length,2);
+  const oldReservation=status.reservations.find(x=>x.id===ticket.id);
+  assert.equal(oldReservation.state,'expired');
+  assert.equal(oldReservation.reason,'CONTROL_PLANE_RESTART');
+  assert.equal(status.reservations.find(x=>x.id===ownerTicket.id).state,'expired');
   assert.equal((await request('POST','/internal/m2/hosts/'+hostId+'/heartbeat',hostToken,good)).status,202);
   assert.equal((await request('POST','/internal/m2/reservations',admin,
    {...reservation,idempotencyKey:'offline-smoke-00003'})).status,403);
