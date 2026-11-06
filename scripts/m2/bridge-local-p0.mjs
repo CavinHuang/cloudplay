@@ -9,6 +9,7 @@ const connection={};
 const params={hostId:process.env.CLOUDPLAY_M2_HOST_ID,
  labToken:process.env.CLOUDPLAY_LAB_TOKEN,
  m2HostToken:process.env.CLOUDPLAY_M2_HOST_TOKEN,
+ m2Port:Number(process.env.CLOUDPLAY_M2_PORT||7790),
  drain:process.env.CLOUDPLAY_M2_HOST_DRAIN==='1',connection};
 const remoteSettings=['CLOUDPLAY_M2_GATEWAY_URL','CLOUDPLAY_M2_CLIENT_CERT',
  'CLOUDPLAY_M2_CLIENT_KEY','CLOUDPLAY_M2_GATEWAY_CA'];
