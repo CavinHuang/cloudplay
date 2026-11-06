@@ -8,7 +8,7 @@ Set these private environment variables through your terminal's secure environme
 
 - `CLOUDPLAY_M2_STATE_DIR`: absolute private writable directory **outside** any immutable release.
 - `CLOUDPLAY_M2_ADMIN_TOKEN`: fresh random secret, at least 32 characters.
-- `CLOUDPLAY_M2_HOST_TOKENS`: JSON mapping fixed host IDs to separately generated secrets of at least 32 characters; e.g. `{"win-local-host":"<independent-secret>"}`.
+- `CLOUDPLAY_M2_HOST_TOKENS`: **optional legacy** static JSON host-key map, e.g. `{"win-local-host":"<independent-secret>"}`. New installations can omit it and enroll hosts through the authenticated admin API; legacy static IDs cannot be rotated or revoked through that API (remove them from environment configuration and restart instead).
 - `CLOUDPLAY_M2_HOST_ID` / `CLOUDPLAY_M2_HOST_TOKEN`: local bridge's host name and matching secret.
 - `CLOUDPLAY_LAB_TOKEN`: secret from existing local P0 Coordinator, used only to read `http://127.0.0.1:7788/internal/status`.
 - `CLOUDPLAY_M2_ALLOW_SUPERTUXKART_RESERVATION=1`: optional, explicitly permits **capacity reservations only** for the fixed open-source game ID; default is off. No commercial content license is implied.
@@ -49,6 +49,38 @@ All private routes require `Authorization: Bearer <token>`; writes additionally 
 | `DELETE /internal/m2/reservations/{uuid}` | Admin secret | `{"ownerId":"operator01"}`; matching owner required |
 
 An eligible host is one with a fresh (16-second) signed-by-its-key heartbeat declaring all prerequisites, no running game and no drain, with no existing reservation. These are not verified GPU proofs. Capacity is **one per host and one per owner**, never a fabricated multi-GPU number. Reservation TTL defaults to 120 seconds. Retries with the same owner/idempotency key return the same active reservation; after release or expiry, the same key cannot silently book another host. A corrupted journal blocks startup. On coordinator restart, all old reservations become `expired` and fresh host heartbeats are required. Only accepted reservations are written to a private atomic JSON journal; no secret is persisted.
+
+## M2 registered host credentials and owner-bound private reservations
+
+The private operator can now enroll new hosts and reservation owners using the **admin** Bearer token, without restarting the M2 process or editing the legacy host-token JSON. All endpoints below are loopback-only and every mutation requires `X-CloudPlay-M2-Action: 1`; registration requires JSON containing exactly the ID field.
+
+| Endpoint | Who may call | Description |
+|---|---|---|
+| `POST /internal/m2/hosts` | Admin | `{"hostId":"gpuHost01"}` registers one private host |
+| `POST /internal/m2/owners` | Admin | `{"ownerId":"operator01"}` registers one private owner |
+| `POST /internal/m2/hosts/{id}/rotate` | Admin | Rotate host token; invalidate its heartbeat and active reservations |
+| `POST /internal/m2/owners/{id}/rotate` | Admin | Rotate owner token and expire owned reservations |
+| `DELETE /internal/m2/hosts/{id}` or `/owners/{id}` | Admin | Revoke a registered credential and expire matching reservations |
+| `GET /internal/m2/identities` | Admin | List host/owner IDs and creation timestamps, never secrets |
+| `GET /internal/m2/owners/{id}/reservations` | Matching owner token or admin | Only that owner's reservation metadata |
+| `POST /internal/m2/reservations` | Matching owner token or admin | Exclusive host capacity reservation with matching `ownerId` |
+| `DELETE /internal/m2/reservations/{uuid}` | Matching owner token or admin | Release with matching `ownerId` |
+
+**Example (PowerShell, trusted operator machine only):** With the M2 service already running, set `$admin` securely to `CLOUDPLAY_M2_ADMIN_TOKEN`, then enroll identities:
+
+```powershell
+$base = 'http://127.0.0.1:7790'
+$headers = @{ Authorization = "Bearer $admin"; 'X-CloudPlay-M2-Action' = '1' }
+$hostKey = Invoke-RestMethod -Uri "$base/internal/m2/hosts" -Method Post -Headers $headers -ContentType 'application/json' -Body '{"hostId":"gpuHost01"}'
+$ownerKey = Invoke-RestMethod -Uri "$base/internal/m2/owners" -Method Post -Headers $headers -ContentType 'application/json' -Body '{"ownerId":"operator01"}'
+# Place $hostKey.token and $ownerKey.token in private secret configuration
+# (for the P0 bridge use CLOUDPLAY_M2_HOST_ID and CLOUDPLAY_M2_HOST_TOKEN).
+# Do not echo or paste these values into logs or public issues.
+```
+
+Each `token` is a new random 256-bit secret, returned **once** on enrollment/rotation. Only its SHA-256 digest is stored in the separately persisted `m2-identities.json` under `CLOUDPLAY_M2_STATE_DIR` (outside the immutable release; restrictive file permissions). The admin credential and plaintext host/owner secrets are not written to this journal. Corruption or unsafe symlinks fail closed at startup. Keep both `m2-journal.json` and `m2-identities.json` private and protected by filesystem ACLs.
+
+Registered host keys can send only their own host heartbeat. Registered owner keys can reserve/release/read **only their own** capacity; they cannot read global status, manage hosts or act as another owner. The admin key remains an explicit, trusted operator override. A rotated or revoked key immediately loses authorization; associated reservations expire and host capacity requires a fresh authenticated heartbeat. On restart, prior reservations expire regardless of whether identities persist. **Enrollment here is private operator registration, NOT internet-facing host authentication or public customer signup.**
 
 ## Hard safety and next milestone
 
