@@ -53,6 +53,10 @@ test('registration generates unrepeatable secrets; journal contains digests and 
   assert.equal(reloaded.list().owners.length,0);
   fs.writeFileSync(statePath,'{broken');
   assert.throws(()=>createIdentityRegistry({statePath}),/M2_IDENTITIES_READ_FAILED/);
+  fs.writeFileSync(statePath,JSON.stringify({schema:'cloudplay.m2.identities.v1',entries:[
+   {kind:'unknown',id:'',hash:'a'.repeat(64),createdAt:1}]}));
+  assert.throws(()=>createIdentityRegistry({statePath}),/M2_INVALID_IDENTITIES_JOURNAL/);
+  assert.equal(reloaded.register('unknown','').status,422);
  }finally{fs.rmSync(dir,{recursive:true,force:true})}
 });
 
