@@ -133,3 +133,53 @@ test('host sync refuses a missing/currently unconfirmed connection without autho
    {connectionId:uuid,sequence:1})).json()).code,'HOST_CONNECTION_REQUIRED');
  }finally{await stop(app)}
 });
+
+test('lease renewal changes the observed snapshot and forces re-ack; expiry clears it',async()=>{
+ let now=1000000;
+ const hostToken='H'.repeat(48);
+ const app=createM2Coordinator({adminToken:admin,hostTokens:{hostGamma:hostToken},
+  enabledGames:['supertuxkart'],clock:()=>now});
+ const url=await start(app);
+ const route='/internal/m2/hosts/hostGamma';
+ try{
+  const connected=await req(url,route+'/connect',hostToken,'POST',hello);
+  assert.equal(connected.status,201);
+  const connectionId=(await connected.json()).connectionId;
+  assert.equal((await req(url,route+'/heartbeat',hostToken,'POST',
+   {...ready,connectionId,sequence:1})).status,202);
+  const created=await req(url,'/internal/m2/reservations',admin,'POST',{
+   ownerId:'operator01',gameId:'supertuxkart',idempotencyKey:'renew-sync-key-001'
+  });
+  assert.equal(created.status,201);
+  const first=(await created.json()).reservation;
+  const snap1=(await req(url,route+'/sync',hostToken,'POST',{connectionId,sequence:1})).json();
+  const s1=await snap1;
+  assert.equal(s1.assignment.expiresAt,first.expiresAt);
+  const ack1={connectionId,sequence:2,reservationId:first.id,expiresAt:first.expiresAt};
+  assert.equal((await req(url,route+'/ack',hostToken,'POST',ack1)).status,202);
+  assert.equal((await (await req(url,route+'/sync',hostToken,'POST',
+   {connectionId,sequence:3})).json()).acknowledged,true);
+  now+=61000;
+  assert.equal((await req(url,route+'/heartbeat',hostToken,'POST',
+   {...ready,connectionId,sequence:2})).status,202);
+  const renewed=await req(url,'/internal/m2/reservations/'+first.id+'/renew',admin,'POST',{
+   ownerId:'operator01',expectedExpiresAt:first.expiresAt
+  });
+  assert.equal(renewed.status,200);
+  const next=(await renewed.json()).reservation;
+  assert.ok(next.expiresAt>first.expiresAt);
+  const s2=await (await req(url,route+'/sync',hostToken,'POST',
+   {connectionId,sequence:4})).json();
+  assert.equal(s2.assignment.expiresAt,next.expiresAt);
+  assert.equal(s2.acknowledged,false);
+  assert.equal((await (await req(url,route+'/ack',hostToken,'POST',
+   {...ack1,sequence:5})).json()).code,'HOST_ASSIGNMENT_STALE');
+  assert.equal((await req(url,route+'/ack',hostToken,'POST',
+   {...ack1,sequence:5,expiresAt:next.expiresAt})).status,202);
+  now=next.expiresAt+1;
+  const expired=await (await req(url,route+'/sync',hostToken,'POST',
+   {connectionId,sequence:6})).json();
+  assert.equal(expired.action,'CAPACITY_IDLE');
+  assert.equal(expired.acknowledged,false);
+ }finally{await stop(app)}
+});
