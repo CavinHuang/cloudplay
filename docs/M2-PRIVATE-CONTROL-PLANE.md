@@ -2,6 +2,12 @@
 
 **Runnable Node.js control-plane prototype.** It handles per-host authentication, local P0 heartbeat ingestion, independent admin authentication, one reservation per host/owner, idempotency, lease timeout, crash-safe journaling and restart expiry. It runs **only on 127.0.0.1:7790** and never executes games, sends a Sunshine credential, opens remote stream access, or asserts GPU/video/audio/input has been proven. Existing public `POST /api/v1/sessions` remains disabled. All host readiness values are **self-reported claims**.
 
+## Optional encrypted private cross-machine host transport
+
+M2 now supports a **separate, explicit opt-in mutual-TLS host gateway** for private LAN/VPN use, while its underlying admission coordinator remains restricted to `127.0.0.1`. The gateway accepts only the four authenticated host-process endpoints and demands a CA-signed client certificate whose CN matches the host ID **plus** that host's independent Bearer token. It does not expose the admin, owner, public session, Sunshine or game-streaming endpoints. TLS 1.3 with a validated server IP SAN and separately pinned CA is mandatory. The Host Bridge may select the gateway with explicit `CLOUDPLAY_M2_GATEWAY_URL` and certificate paths; its P0 status request still stays local.
+
+For complete setup, certificate issuance and firewall requirements, see `docs/M2-PRIVATE-MTLS-GATEWAY.md` in the repository (shipped as `M2-TLS-GATEWAY.md` in the Windows offline bundle). This is not a public cloud-gaming product or verified multi-machine GPU streaming; physical remote-host integration is still an independent acceptance milestone.
+
 ## Start from source (Node.js 22+, no npm install required for M2)
 
 Set these private environment variables through your terminal's secure environment configuration:
