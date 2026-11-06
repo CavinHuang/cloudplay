@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Opt-in heartbeat bridge for the already configured local P0 lab.
-import {sendP0Heartbeat} from '../../lib/m2/host-bridge.mjs';
+import {sendP0Heartbeat,syncHostReservation} from '../../lib/m2/host-bridge.mjs';
 // The connection ID is scoped to THIS bridge process; it is never persisted
 // or reused after restart. A competing process fences old heartbeats.
 const connection={};
@@ -14,7 +14,9 @@ async function run(){
  inFlight=true;
  try{
   const result=await sendP0Heartbeat(params);
+  const snapshot=await syncHostReservation(params);
   console.log(result.selfReportedEligible?'M2: host claims eligible (NOT gameplay proof)':'M2: host not eligible; no reservation possible');
+  if(snapshot.assigned)console.log('M2: private capacity assignment observed (NO game or stream started)');
  }catch(e){
   console.error('M2 local bridge failed:',e.message);
   process.exitCode=1;
