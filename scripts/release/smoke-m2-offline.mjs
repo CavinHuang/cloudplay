@@ -138,6 +138,19 @@ async function main(){
    {...good,connectionId:firstId,sequence:2})).status,409);
   assert.equal((await request('POST','/internal/m2/hosts/newOfflineHost/heartbeat',enrolledHostToken,
    {...good,connectionId:nextId,sequence:1})).status,202);
+  // A connected host can pull its OWN observation-only capacity snapshot.
+  // Before booking there must be no assignment, even for a healthy host.
+  const syncPath='/internal/m2/hosts/newOfflineHost/sync';
+  const ackPath='/internal/m2/hosts/newOfflineHost/ack';
+  const initialSync=await request('POST',syncPath,enrolledHostToken,
+   {connectionId:nextId,sequence:1});
+  assert.equal(initialSync.status,200);
+  const initiallyIdle=await initialSync.json();
+  assert.equal(initiallyIdle.action,'CAPACITY_IDLE');
+  assert.equal(initiallyIdle.assignment,null);
+  assert.equal(initiallyIdle.gameLaunchEnabled,false);
+  assert.equal((await request('POST',syncPath,enrolledHostToken,
+   {connectionId:nextId,sequence:1})).status,409);
   const ownerRequest={ownerId:'offlineOwner',gameId:'supertuxkart',idempotencyKey:'offline-owner-0001'};
   assert.equal((await request('POST','/internal/m2/reservations',hostToken,ownerRequest)).status,401);
   const ownerBooking=await request('POST','/internal/m2/reservations',enrolledOwnerToken,ownerRequest);
