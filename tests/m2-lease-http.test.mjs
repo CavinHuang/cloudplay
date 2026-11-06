@@ -31,7 +31,14 @@ test('M2 real HTTP renewal is owner-authenticated and fenced to one current expi
   const ownerToken=(await enrolledOwner.json()).token;
   const otherOwner=await req(url,'/internal/m2/owners',admin,'POST',{ownerId:'ownerBeta'});
   const otherToken=(await otherOwner.json()).token;
-  assert.equal((await req(url,'/internal/m2/hosts/gpuHost01/heartbeat',hostToken,'POST',good)).status,202);
+  const hello={protocol:'cloudplay.m2.host-connection.v1'};
+  const conn=await req(url,'/internal/m2/hosts/gpuHost01/connect',hostToken,'POST',hello);
+  assert.equal(conn.status,201);
+  const connectionId=(await conn.json()).connectionId;
+  let sequence=0;
+  const heartbeat=async flags=>req(url,'/internal/m2/hosts/gpuHost01/heartbeat',hostToken,
+   'POST',{...flags,connectionId,sequence:++sequence});
+  assert.equal((await heartbeat(good)).status,202);
   const created=await req(url,'/internal/m2/reservations',ownerToken,'POST',reservation);
   assert.equal(created.status,201);
   const ticket=(await created.json()).reservation;
@@ -46,9 +53,9 @@ test('M2 real HTTP renewal is owner-authenticated and fenced to one current expi
   now+=61000;
   // A 16s heartbeat must be refreshed before a lease may be prolonged.
   assert.equal((await (await req(url,route,ownerToken,'POST',original)).json()).code,'HOST_NOT_READY_FOR_RENEWAL');
-  assert.equal((await req(url,'/internal/m2/hosts/gpuHost01/heartbeat',hostToken,'POST',{...good,drain:true})).status,202);
+  assert.equal((await heartbeat({...good,drain:true})).status,202);
   assert.equal((await (await req(url,route,ownerToken,'POST',original)).json()).code,'HOST_NOT_READY_FOR_RENEWAL');
-  assert.equal((await req(url,'/internal/m2/hosts/gpuHost01/heartbeat',hostToken,'POST',good)).status,202);
+  assert.equal((await heartbeat(good)).status,202);
   const renewed=await req(url,route,ownerToken,'POST',original);
   assert.equal(renewed.status,200);
   const next=(await renewed.json()).reservation;

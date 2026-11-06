@@ -120,7 +120,24 @@ async function main(){
   const enrolledOwner=await request('POST','/internal/m2/owners',admin,{ownerId:'offlineOwner'});
   assert.equal(enrolledOwner.status,201);
   const enrolledOwnerToken=(await enrolledOwner.json()).token;
-  assert.equal((await request('POST','/internal/m2/hosts/newOfflineHost/heartbeat',enrolledHostToken,good)).status,202);
+  // New host identities MUST connect before any heartbeat can count.
+  assert.equal((await request('POST','/internal/m2/hosts/newOfflineHost/heartbeat',enrolledHostToken,good)).status,409);
+  const hello={protocol:'cloudplay.m2.host-connection.v1'};
+  const connectPath='/internal/m2/hosts/newOfflineHost/connect';
+  const firstConn=await request('POST',connectPath,enrolledHostToken,hello);
+  assert.equal(firstConn.status,201);
+  const firstId=(await firstConn.json()).connectionId;
+  const firstReport={...good,connectionId:firstId,sequence:1};
+  assert.equal((await request('POST','/internal/m2/hosts/newOfflineHost/heartbeat',enrolledHostToken,firstReport)).status,202);
+  assert.equal((await request('POST','/internal/m2/hosts/newOfflineHost/heartbeat',enrolledHostToken,firstReport)).status,409);
+  const nextConn=await request('POST',connectPath,enrolledHostToken,hello);
+  assert.equal(nextConn.status,201);
+  const nextId=(await nextConn.json()).connectionId;
+  assert.notEqual(firstId,nextId);
+  assert.equal((await request('POST','/internal/m2/hosts/newOfflineHost/heartbeat',enrolledHostToken,
+   {...good,connectionId:firstId,sequence:2})).status,409);
+  assert.equal((await request('POST','/internal/m2/hosts/newOfflineHost/heartbeat',enrolledHostToken,
+   {...good,connectionId:nextId,sequence:1})).status,202);
   const ownerRequest={ownerId:'offlineOwner',gameId:'supertuxkart',idempotencyKey:'offline-owner-0001'};
   assert.equal((await request('POST','/internal/m2/reservations',hostToken,ownerRequest)).status,401);
   const ownerBooking=await request('POST','/internal/m2/reservations',enrolledOwnerToken,ownerRequest);

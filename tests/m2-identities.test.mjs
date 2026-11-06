@@ -77,7 +77,13 @@ test('real localhost HTTP scopes reservations to owner identity; rotate and revo
   assert.equal(inventory.hosts.length,1);assert.equal(inventory.owners.length,2);
   assert.equal(JSON.stringify(inventory).includes(hostToken),false);
   assert.equal((await request(base,'/internal/m2/hosts/gpuHost01/heartbeat',admin,'POST',good)).status,401);
-  assert.equal((await request(base,'/internal/m2/hosts/gpuHost01/heartbeat',hostToken,'POST',good)).status,202);
+  assert.equal((await request(base,'/internal/m2/hosts/gpuHost01/heartbeat',hostToken,'POST',good)).status,409);
+  const hello={protocol:'cloudplay.m2.host-connection.v1'};
+  const connected=await request(base,'/internal/m2/hosts/gpuHost01/connect',hostToken,'POST',hello);
+  assert.equal(connected.status,201);
+  const connectionId=(await connected.json()).connectionId;
+  assert.equal((await request(base,'/internal/m2/hosts/gpuHost01/heartbeat',hostToken,'POST',
+   {...good,connectionId,sequence:1})).status,202);
   assert.equal((await request(base,'/internal/m2/reservations',otherToken,'POST',body)).status,401);
   const booked=await request(base,'/internal/m2/reservations',ownerToken,'POST',body);
   assert.equal(booked.status,201);
@@ -97,7 +103,12 @@ test('real localhost HTTP scopes reservations to owner identity; rotate and revo
   assert.equal(status.hosts.length,0);
   assert.equal(status.reservations[0].state,'expired');
   assert.equal(status.reservations[0].reason,'HOST_CREDENTIAL_CHANGED');
-  assert.equal((await request(base,'/internal/m2/hosts/gpuHost01/heartbeat',rotatedHost,'POST',good)).status,202);
+  assert.equal((await request(base,'/internal/m2/hosts/gpuHost01/heartbeat',rotatedHost,'POST',good)).status,409);
+  const fresh=await request(base,'/internal/m2/hosts/gpuHost01/connect',rotatedHost,'POST',hello);
+  assert.equal(fresh.status,201);
+  const freshId=(await fresh.json()).connectionId;
+  assert.equal((await request(base,'/internal/m2/hosts/gpuHost01/heartbeat',rotatedHost,'POST',
+   {...good,connectionId:freshId,sequence:1})).status,202);
   const again=await request(base,'/internal/m2/reservations',ownerToken,'POST',
    {...body,idempotencyKey:'registered-0002'});
   assert.equal(again.status,201);
