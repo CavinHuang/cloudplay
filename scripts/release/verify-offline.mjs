@@ -36,7 +36,7 @@ export function verify(root){
     'services/m2/scripts/m2/start-control.mjs',
     'services/m2/scripts/m2/start-tls-gateway.mjs',
     'services/m2/scripts/m2/bridge-local-p0.mjs',
-    'M2-CONTROL-PLANE.md'];
+    'M2-CONTROL-PLANE.md','M2-TLS-GATEWAY.md'];
  if(m.mode==='windows-full')required.push('services/web/server.js','source/web-DEPENDENCIES.txt');
  const declared=new Set(m.files.map(x=>x.path));
  for(const filename of required)if(!declared.has(filename))throw new Error(`Offline release missing required component: ${filename}`);
