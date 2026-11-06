@@ -107,6 +107,31 @@ async function main(){
   const journal=fs.readFileSync(path.join(stateDir,'m2-journal.json'),'utf8');
   assert.ok(journal.includes(ticket.id));
   assert.ok(!journal.includes(admin)&&!journal.includes(hostToken));
+  // Admin-only enrollment issues scoped private identities with credentials
+  // returned exactly once. Keep existing env-configured legacy host separate.
+  const enrolledHost=await request('POST','/internal/m2/hosts',admin,{hostId:'newOfflineHost'});
+  assert.equal(enrolledHost.status,201);
+  const enrolledHostToken=(await enrolledHost.json()).token;
+  const enrolledOwner=await request('POST','/internal/m2/owners',admin,{ownerId:'offlineOwner'});
+  assert.equal(enrolledOwner.status,201);
+  const enrolledOwnerToken=(await enrolledOwner.json()).token;
+  assert.equal((await request('POST','/internal/m2/hosts/newOfflineHost/heartbeat',enrolledHostToken,good)).status,202);
+  const ownerRequest={ownerId:'offlineOwner',gameId:'supertuxkart',idempotencyKey:'offline-owner-0001'};
+  assert.equal((await request('POST','/internal/m2/reservations',hostToken,ownerRequest)).status,401);
+  const ownerBooking=await request('POST','/internal/m2/reservations',enrolledOwnerToken,ownerRequest);
+  assert.equal(ownerBooking.status,201);
+  const ownerTicket=(await ownerBooking.json()).reservation;
+  assert.equal(ownerTicket.hostId,'newOfflineHost');
+  assert.equal((await request('GET','/internal/m2/status',enrolledOwnerToken)).status,401);
+  const rotated=await request('POST','/internal/m2/hosts/newOfflineHost/rotate',admin);
+  assert.equal(rotated.status,200);
+  assert.equal((await request('POST','/internal/m2/hosts/newOfflineHost/heartbeat',enrolledHostToken,good)).status,401);
+  assert.equal((await request('DELETE','/internal/m2/owners/offlineOwner',admin)).status,200);
+  assert.equal((await request('GET','/internal/m2/owners/offlineOwner/reservations',enrolledOwnerToken)).status,401);
+  const recorded=await (await request('GET','/internal/m2/status',admin)).json();
+  assert.equal(recorded.reservations.find(x=>x.id===ownerTicket.id).reason,'HOST_CREDENTIAL_CHANGED');
+  const identitiesDisk=fs.readFileSync(path.join(stateDir,'m2-identities.json'),'utf8');
+  assert.ok(!identitiesDisk.includes(enrolledHostToken)&&!identitiesDisk.includes(enrolledOwnerToken));
   // A controlled service restart expires the reservation and clears all
   // unverified host presence; it must not silently restore active capacity.
   await stop();
@@ -115,10 +140,11 @@ async function main(){
   assert.equal(statusReply.status,200);
   const status=await statusReply.json();
   assert.equal(status.hosts.length,0);
-  assert.equal(status.reservations.length,1);
-  assert.equal(status.reservations[0].id,ticket.id);
-  assert.equal(status.reservations[0].state,'expired');
-  assert.equal(status.reservations[0].reason,'CONTROL_PLANE_RESTART');
+  assert.equal(status.reservations.length,2);
+  const oldReservation=status.reservations.find(x=>x.id===ticket.id);
+  assert.equal(oldReservation.state,'expired');
+  assert.equal(oldReservation.reason,'CONTROL_PLANE_RESTART');
+  assert.equal(status.reservations.find(x=>x.id===ownerTicket.id).state,'expired');
   assert.equal((await request('POST','/internal/m2/hosts/'+hostId+'/heartbeat',hostToken,good)).status,202);
   assert.equal((await request('POST','/internal/m2/reservations',admin,
    {...reservation,idempotencyKey:'offline-smoke-00003'})).status,403);

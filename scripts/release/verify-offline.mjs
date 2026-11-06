@@ -26,6 +26,7 @@ export function verify(root){
     'services/p0/scripts/p0/create-m1-index.mjs',
     'services/p0/scripts/p0/verify-m1-acceptance.mjs',
     'services/m2/lib/m2/admission.mjs',
+    'services/m2/lib/m2/identities.mjs',
     'services/m2/lib/m2/host-bridge.mjs',
     'services/m2/lab/m2-coordinator.mjs',
     'services/m2/scripts/m2/start-control.mjs',
