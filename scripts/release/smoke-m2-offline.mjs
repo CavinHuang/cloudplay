@@ -107,6 +107,31 @@ async function main(){
   const journal=fs.readFileSync(path.join(stateDir,'m2-journal.json'),'utf8');
   assert.ok(journal.includes(ticket.id));
   assert.ok(!journal.includes(admin)&&!journal.includes(hostToken));
+  // Admin-only enrollment issues scoped private identities with credentials
+  // returned exactly once. Keep existing env-configured legacy host separate.
+  const enrolledHost=await request('POST','/internal/m2/hosts',admin,{hostId:'newOfflineHost'});
+  assert.equal(enrolledHost.status,201);
+  const enrolledHostToken=(await enrolledHost.json()).token;
+  const enrolledOwner=await request('POST','/internal/m2/owners',admin,{ownerId:'offlineOwner'});
+  assert.equal(enrolledOwner.status,201);
+  const enrolledOwnerToken=(await enrolledOwner.json()).token;
+  assert.equal((await request('POST','/internal/m2/hosts/newOfflineHost/heartbeat',enrolledHostToken,good)).status,202);
+  const ownerRequest={ownerId:'offlineOwner',gameId:'supertuxkart',idempotencyKey:'offline-owner-0001'};
+  assert.equal((await request('POST','/internal/m2/reservations',hostToken,ownerRequest)).status,401);
+  const ownerBooking=await request('POST','/internal/m2/reservations',enrolledOwnerToken,ownerRequest);
+  assert.equal(ownerBooking.status,201);
+  const ownerTicket=(await ownerBooking.json()).reservation;
+  assert.equal(ownerTicket.hostId,'newOfflineHost');
+  assert.equal((await request('GET','/internal/m2/status',enrolledOwnerToken)).status,401);
+  const rotated=await request('POST','/internal/m2/hosts/newOfflineHost/rotate',admin);
+  assert.equal(rotated.status,200);
+  assert.equal((await request('POST','/internal/m2/hosts/newOfflineHost/heartbeat',enrolledHostToken,good)).status,401);
+  assert.equal((await request('DELETE','/internal/m2/owners/offlineOwner',admin)).status,200);
+  assert.equal((await request('GET','/internal/m2/owners/offlineOwner/reservations',enrolledOwnerToken)).status,401);
+  const recorded=await (await request('GET','/internal/m2/status',admin)).json();
+  assert.equal(recorded.reservations.find(x=>x.id===ownerTicket.id).reason,'HOST_CREDENTIAL_CHANGED');
+  const identitiesDisk=fs.readFileSync(path.join(stateDir,'m2-identities.json'),'utf8');
+  assert.ok(!identitiesDisk.includes(enrolledHostToken)&&!identitiesDisk.includes(enrolledOwnerToken));
   // A controlled service restart expires the reservation and clears all
   // unverified host presence; it must not silently restore active capacity.
   await stop();
