@@ -28,7 +28,8 @@ async function main(){
  const root=path.resolve(source);
  const node=path.join(root,'runtime','node.exe');
  const entry=path.join(root,'services','m2','scripts','m2','start-control.mjs');
- for(const name of [node,entry]){
+ const gatewayEntry=path.join(root,'services','m2','scripts','m2','start-tls-gateway.mjs');
+ for(const name of [node,entry,gatewayEntry]){
   if(!fs.existsSync(name)||!fs.statSync(name).isFile())throw Error('M2_BUNDLED_ENTRYPOINT_MISSING');
  }
  const temp=fs.mkdtempSync(path.join(os.tmpdir(),'cloudplay-m2-offline-'));
@@ -85,6 +86,14 @@ async function main(){
  const reservation={ownerId:'local-operator',gameId:'supertuxkart',idempotencyKey:'offline-smoke-00001'};
  try{
   await start(true);
+  // A clean installed Windows bundle contains the new TLS ingress, but
+  // starting it with no explicit opt-in/certificates must fail CLOSED.
+  const refused=await new Promise((resolve,reject)=>{
+   const probe=spawn(node,[gatewayEntry],{cwd:root,windowsHide:true,stdio:'ignore',
+    env:{...process.env,CLOUDPLAY_M2_TLS_GATEWAY_ENABLE:'0'}});
+   probe.once('error',reject);probe.once('exit',resolve);
+  });
+  assert.notEqual(refused,0,'mTLS host gateway must never autostart by default');
   assert.equal((await request('GET','/internal/m2/status','wrong-token')).status,401);
   assert.equal((await request('GET','/internal/m2/status',hostToken)).status,401);
   assert.equal((await request('POST','/internal/m2/hosts/'+hostId+'/heartbeat',admin,unavailable)).status,401);
