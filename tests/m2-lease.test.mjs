@@ -8,8 +8,8 @@ const request={ownerId:'ownerAlpha',gameId:'supertuxkart',idempotencyKey:'fencek
 const uuid='00000000-0000-4000-8000-00000000aaaa';
 
 test('fenced M2 lease renewal requires a fresh idle heartbeat, advances expiry only once, and has hard lifetime',()=>{
- let now=Date.parse('2026-11-06T00:00:00.000Z'),persisted=0;
- const manager=createAdmissionManager({clock:()=>now,id:()=>uuid,
+ let now=Date.parse('2026-11-06T00:00:00.000Z'),persisted=0,seq=0;
+ const manager=createAdmissionManager({clock:()=>now,id:()=>seq++===0?uuid:'00000000-0000-4000-8000-00000000aaab',
   enabledGames:['supertuxkart'],hostTtlMs:1500,leaseTtlMs:4000,maxLeaseAgeMs:10000,
   onChange:()=>{persisted++}});
  manager.heartbeat('gpu01',good);
